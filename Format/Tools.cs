@@ -3,18 +3,15 @@ using IxMilia.Dxf.Entities;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Documents;
 using System.Windows.Media;
 
 namespace ToGeometryConverter.Format
 {
     public static class Tools
     {
-        public static PathGeometry Geometry;
+        public static PathGeometry Geometry { get; set; }
 
         public static System.Windows.Point Pftp(PointF point)
         {
@@ -45,15 +42,8 @@ namespace ToGeometryConverter.Format
         {
             List<string> inArr = GetPArr(innerFigure.ToString());
 
-            switch (innerFigure.GetType().FullName)
-            {
-                case "System.Windows.Media.PolyQuadraticBezierSegment":
-                    break;
-            }
-
             if (!innerFigure.IsClosed) 
             {
-
                 foreach (PathFigure figure in Geometry.Figures)
                 {
                     if (!figure.IsClosed)
@@ -132,6 +122,7 @@ namespace ToGeometryConverter.Format
 
         public static PathGeometry MakeTransform (PathGeometry inGmtr)
         {
+            
             TransformGroup Transform = new TransformGroup();
 
             TranslateTransform Translate = new TranslateTransform();
@@ -142,12 +133,17 @@ namespace ToGeometryConverter.Format
             Transform.Children.Add(Rotate);
             Transform.Children.Add(Translate);
 
-            Rotate.CenterX = inGmtr.Bounds.X + Tools.Geometry.Bounds.Width / 2;
-            Rotate.CenterY = inGmtr.Bounds.Y + Tools.Geometry.Bounds.Height / 2;
+            Rotate.CenterX = inGmtr.Bounds.X + inGmtr.Bounds.Width / 2;
+            Rotate.CenterY = inGmtr.Bounds.Y + inGmtr.Bounds.Height / 2;
 
             inGmtr.Transform = Transform;
 
             return inGmtr;
+        }
+
+        public static double Lenth(System.Windows.Point point1, System.Windows.Point point2)
+        {
+            return Math.Sqrt(Math.Pow(point2.X - point1.X, 2) + Math.Pow(point2.Y - point1.Y, 2));
         }
     }
 }

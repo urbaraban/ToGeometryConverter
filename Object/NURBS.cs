@@ -5,10 +5,12 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
-namespace ToGeometryConverter.Object
+namespace System.Windows.Media
 {
-    public class NURBS : NotifierBase
+    public class NURBS
     {
+
+        private PathSegmentCollection pathSegments = new PathSegmentCollection();
 
         private ObservableCollection<RationalBSplinePoint> pWeightedPointSeries = new ObservableCollection<RationalBSplinePoint>();
 
@@ -17,7 +19,7 @@ namespace ToGeometryConverter.Object
             get { return pWeightedPointSeries; }
             set
             {
-                SetProperty(ref pWeightedPointSeries, value);
+                pWeightedPointSeries = value;
             }
         }
 
@@ -28,7 +30,7 @@ namespace ToGeometryConverter.Object
             get { return pIsBSpline; }
             set
             {
-                SetProperty(ref pIsBSpline, value);
+                pIsBSpline = value;
             }
         }
 
@@ -138,8 +140,6 @@ namespace ToGeometryConverter.Object
                 y += Points[i].MyPoint.Y * temp;
             }
 
-            Console.WriteLine(x + " " + y);
-
             return new Point(x, y);
         }
 
@@ -165,7 +165,5 @@ namespace ToGeometryConverter.Object
             }
             return new Point(x, y);
         }
-
-
     }
 }

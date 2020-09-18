@@ -1,8 +1,8 @@
 ﻿using System.Windows;
 
-namespace ToGeometryConverter.Object
+namespace System.Windows.Media
 {
-    public class RationalBSplinePoint : NotifierBase
+    public class RationalBSplinePoint
     {
 
         public RationalBSplinePoint(Point myPoint, double weight)
@@ -18,7 +18,7 @@ namespace ToGeometryConverter.Object
             get { return pMyPoint; }
             set
             {
-                SetProperty(ref pMyPoint, value);
+                this.pMyPoint = value;
             }
         }
 
@@ -29,7 +29,7 @@ namespace ToGeometryConverter.Object
             get { return pWeight; }
             set
             {
-                SetProperty(ref pWeight, value);
+                this.pWeight = value;
             }
         }
 

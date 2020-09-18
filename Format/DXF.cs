@@ -5,9 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
-using ToGeometryConverter.Object;
 using Size = System.Windows.Size;
 
 namespace ToGeometryConverter.Format
@@ -15,13 +15,13 @@ namespace ToGeometryConverter.Format
     public static class DXF
     {
         public static PathGeometry Get(string filename, double CRS)
+
         {
             DxfFile dxfFile;
             try
             {
                 using (FileStream fs = new FileStream(filename, FileMode.Open))
                 {
-
                     dxfFile = DxfFile.Load(fs);
                 };
             }
@@ -128,14 +128,29 @@ namespace ToGeometryConverter.Format
 
                             lwPolyLineFigure.StartPoint = Tools.DxfLwVtp(dxfLwPolyline.Vertices[0]);
 
-                            for (int i = 1; i < dxfLwPolyline.Vertices.Count; i++)
-                                lwPolyLineFigure.Segments.Add(new LineSegment(
-                                    Tools.DxfLwVtp(dxfLwPolyline.Vertices[i % dxfLwPolyline.Vertices.Count]), true));
+                            for (int i = 0; i < dxfLwPolyline.Vertices.Count - 1; i+=1)
+                            {
+                                double radian = Math.Atan(dxfLwPolyline.Vertices[i].Bulge) * 4;
+                                double radius = CalBulgeRadius(Tools.DxfLwVtp(dxfLwPolyline.Vertices[i]), Tools.DxfLwVtp(dxfLwPolyline.Vertices[i + 1]), dxfLwPolyline.Vertices[i].Bulge);
+
+                                lwPolyLineFigure.Segments.Add(
+                                    new ArcSegment(
+                                        Tools.DxfLwVtp(dxfLwPolyline.Vertices[i + 1]),
+                                        new Size(radius, radius),
+                                        Math.Abs(radian * 180 / Math.PI),
+                                        Math.Abs(dxfLwPolyline.Vertices[i].Bulge) > 1,
+                                        dxfLwPolyline.Vertices[i].Bulge < 0 ? SweepDirection.Clockwise : SweepDirection.Counterclockwise,
+                                        true
+                                    ));
+
+                                //points1.Add(Tools.DxfLwVtp(dxfLwPolyline.Vertices[i % dxfLwPolyline.Vertices.Count]));
+                            }
 
                             lwPolyLineFigure.IsClosed = dxfLwPolyline.IsClosed;
 
                             Tools.FindInterContour(lwPolyLineFigure);
-                            break;
+
+                             break;
 
                         case DxfEntityType.Polyline:
                             DxfPolyline dxfPolyline = (DxfPolyline)entity;
@@ -156,6 +171,7 @@ namespace ToGeometryConverter.Format
 
                             NURBS nurbs = new NURBS();
                             nurbs.IsBSpline = true;
+
                             foreach (DxfControlPoint controlPoint in dxfSpline.ControlPoints)
                                 nurbs.WeightedPointSeries.Add(new RationalBSplinePoint(Tools.Dxftp(controlPoint.Point), controlPoint.Weight));
 
@@ -180,6 +196,27 @@ namespace ToGeometryConverter.Format
 
                 }
             }
+        }
+
+        private static double CalBulgeRadius(System.Windows.Point point1, System.Windows.Point point2, double bulge)
+        {
+            // Calculate the vertex angle
+            double cicleAngle = Math.Atan(bulge) * 4;
+
+            //the distance between two points
+            double pointLen = Tools.Lenth(point1, point2);
+            //According to the normal value back
+            double radius = (pointLen / 2) / Math.Sin(cicleAngle / 2);
+
+            if (double.IsInfinity(radius))
+            {
+                return 0;
+            }
+            else
+            {
+                return Math.Abs(radius);
+            }
+            
         }
     }
 }
