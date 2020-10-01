@@ -148,7 +148,7 @@
     <Compile Include="Format\DWG.cs" />
     <Compile Include="Format\DXF.cs" />
     <Compile Include="Format\Tools.cs" />
-    <Compile Include="Object\NURBS.cs" />
+    <Compile Include="Object\NurbsShape.cs" />
     <Compile Include="Object\RationalBSplinePoint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Format\SVG.cs" />

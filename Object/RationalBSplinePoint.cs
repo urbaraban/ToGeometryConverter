@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace System.Windows.Media
+namespace ToGeometryConverter.Object
 {
     public class RationalBSplinePoint
     {

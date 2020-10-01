@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Shapes;
+using ToGeometryConverter.Object;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
 
@@ -9,21 +11,21 @@ namespace ToGeometryConverter.Format
 {
     public static class SVG
     {
-        public static PathGeometry Get(string filepath)
+        public static List<Shape> Get(string filepath)
         {           
             SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
 
-            Tools.Geometry = new PathGeometry();
+            return switchCollection(svgDoc.Children);
 
-            switchCollection(svgDoc.Children);
-
-            void switchCollection(SvgElementCollection elements)
+            List<Shape> switchCollection(SvgElementCollection elements)
             {
+                List<Shape> geometryGroup = new List<Shape>();
+
                 foreach (SvgElement svgElement in elements)
                 {
                     if (svgElement.Visibility == "visible")
                     {
-                      switch (svgElement.GetType().FullName)
+                        switch (svgElement.GetType().FullName)
                         {
                             case "Svg.SvgPolygon":
                                 SvgPolygon polygon = (SvgPolygon)svgElement;
@@ -36,22 +38,32 @@ namespace ToGeometryConverter.Format
                                     pathPolygon.Segments.Add(new LineSegment(Tools.Dbltp(polygon.Points[i].Value, polygon.Points[i + 1].Value), true));
                                 }
                                 pathPolygon.IsClosed = true;
-                                Tools.FindInterContour(pathPolygon);
+                                geometryGroup.Add(Tools.FigureToShape(pathPolygon));
                                 break;
 
                             case "Svg.SvgCircle":
                                 SvgCircle circle = (SvgCircle)svgElement;
-                                Tools.Geometry.AddGeometry(new EllipseGeometry(Tools.Dbltp(circle.CenterX, circle.CenterY), circle.Radius, circle.Radius));
+                                geometryGroup.Add(new Path
+                                {
+                                    Data = new EllipseGeometry(Tools.Dbltp(circle.CenterX, circle.CenterY), circle.Radius, circle.Radius)
+                                });
                                 break;
 
                             case "Svg.SvgEllipse":
                                 SvgEllipse ellipse = (SvgEllipse)svgElement;
-                                Tools.Geometry.AddGeometry(new EllipseGeometry(Tools.Dbltp(ellipse.CenterX, ellipse.CenterY), ellipse.RadiusX, ellipse.RadiusY));
+                                geometryGroup.Add(new Path
+                                {
+                                    Data = new EllipseGeometry(Tools.Dbltp(ellipse.CenterX, ellipse.CenterY), ellipse.RadiusX, ellipse.RadiusY)
+                                });
                                 break;
 
                             case "Svg.SvgRectangle":
                                 SvgRectangle rectangle = (SvgRectangle)svgElement;
-                                Tools.Geometry.AddGeometry(new RectangleGeometry(new Rect(Tools.Dbltp(rectangle.X, rectangle.Y), new Size(rectangle.Width, rectangle.Height))));
+                                geometryGroup.Add(
+                                    new Path
+                                    {
+                                        Data = new RectangleGeometry(new Rect(Tools.Dbltp(rectangle.X, rectangle.Y), new Size(rectangle.Width, rectangle.Height)))
+                                    });
                                 break;
 
                             case "Svg.SvgLine":
@@ -59,7 +71,7 @@ namespace ToGeometryConverter.Format
                                 PathFigure pathLine = new PathFigure();
                                 pathLine.StartPoint = Tools.Dbltp(line.StartX, line.StartY);
                                 pathLine.Segments.Add(new LineSegment(Tools.Dbltp(line.EndX, line.EndY), true));
-                                Tools.FindInterContour(pathLine);
+                                geometryGroup.Add(Tools.FigureToShape(pathLine));
                                 break;
 
                             case "Svg.SvgPath":
@@ -120,23 +132,23 @@ namespace ToGeometryConverter.Format
                                 }
                                 if (!pathPath.Figures.Equals(contourPath))
                                     pathPath.Figures.Add(contourPath);
-  
-                                Tools.Geometry.AddGeometry(pathPath);
+
+                                geometryGroup.Add(new Path
+                                {
+                                    Data = pathPath
+                                }); 
                                 break;
 
                             case "Svg.SvgGroup":
                                 SvgGroup group = (SvgGroup)svgElement;
-                                switchCollection(group.Children);
+                                geometryGroup.AddRange(switchCollection(group.Children));
                                 break;
                         }
                     }
                 }
-            }
 
-            if (Tools.Geometry.Figures.Count > 0)
-                return Tools.MakeTransform(Tools.Geometry);
-            else
-                return null;
+                return geometryGroup;
+            }
         }
     }
 }

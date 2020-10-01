@@ -3,24 +3,25 @@ using IxMilia.Dxf.Blocks;
 using IxMilia.Dxf.Entities;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Collections.ObjectModel;
+
 using System.Linq;
-using System.Windows;
-using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Shapes;
+using ToGeometryConverter.Object;
 using Size = System.Windows.Size;
 
 namespace ToGeometryConverter.Format
 {
     public static class DXF
     {
-        public static PathGeometry Get(string filename, double CRS)
+        public static List<Shape> Get(string filename, double CRS)
 
         {
             DxfFile dxfFile;
             try
             {
-                using (FileStream fs = new FileStream(filename, FileMode.Open))
+                using (System.IO.FileStream fs = new System.IO.FileStream(filename, System.IO.FileMode.Open))
                 {
                     dxfFile = DxfFile.Load(fs);
                 };
@@ -29,21 +30,19 @@ namespace ToGeometryConverter.Format
             {
                 dxfFile = null;
             }
-            
+
 
             if (dxfFile != null)
             {
-                Tools.Geometry = new PathGeometry();
-
-                ParseEntities(dxfFile.Entities);
-
-                return Tools.MakeTransform(Tools.Geometry);
+                return ParseEntities(dxfFile.Entities);
             }
 
             return null;
 
-            void ParseEntities(IList<DxfEntity> entitys)
+            List<Shape> ParseEntities(IList<DxfEntity> entitys)
             {
+                List<Shape> geometryGroup = new List<Shape>();
+
                 foreach (DxfEntity entity in entitys)
                 {
                     switch (entity.EntityType)
@@ -69,7 +68,8 @@ namespace ToGeometryConverter.Format
                             PathFigure contour = new PathFigure();
                             contour.StartPoint = Tools.Dxftp(line.P1);
                             contour.Segments.Add(new LineSegment(Tools.Dxftp(line.P2), true));
-                            Tools.FindInterContour(contour);
+                            geometryGroup.Add(
+                                Tools.FigureToShape(contour));
                             break;
 
                         case DxfEntityType.MLine:
@@ -83,7 +83,9 @@ namespace ToGeometryConverter.Format
                                     Tools.Dxftp(dxfMLine.Vertices[i % dxfMLine.Vertices.Count]), true));
 
                             MLineFigure.IsClosed = MLineFigure.IsClosed;
-                            Tools.FindInterContour(MLineFigure);
+                            geometryGroup.Add(
+                                Tools.FigureToShape(MLineFigure));
+
                             break;
 
                         case DxfEntityType.Arc:
@@ -103,12 +105,14 @@ namespace ToGeometryConverter.Format
                                                 SweepDirection.Counterclockwise,
                                                 true));
 
-                            Tools.FindInterContour(ArcContour);
+                            geometryGroup.Add(Tools.FigureToShape(ArcContour));
                             break;
 
                         case DxfEntityType.Circle:
                             DxfCircle dxfCircle = (DxfCircle)entity;
-                            Tools.Geometry.AddGeometry(new EllipseGeometry(Tools.Dxftp(dxfCircle.Center), dxfCircle.Radius, dxfCircle.Radius));
+                            geometryGroup.Add(new Path{
+                               Data = new EllipseGeometry(Tools.Dxftp(dxfCircle.Center), dxfCircle.Radius, dxfCircle.Radius)
+                            });
                             break;
 
                         case DxfEntityType.Ellipse:
@@ -116,10 +120,12 @@ namespace ToGeometryConverter.Format
 
                             double MajorAngle = (Math.PI * 2 - Math.Atan((dxfEllipse.MajorAxis.Y) / (dxfEllipse.MajorAxis.X))) % (2 * Math.PI);
 
-                            Tools.Geometry.AddGeometry(new EllipseGeometry(Tools.Dxftp(dxfEllipse.Center),
+                            geometryGroup.Add(new Path{
+                                Data = new EllipseGeometry(Tools.Dxftp(dxfEllipse.Center),
                                 dxfEllipse.MajorAxis.Length,
                                 dxfEllipse.MajorAxis.Length * dxfEllipse.MinorAxisRatio,
-                                new RotateTransform(MajorAngle * 180 / Math.PI)));
+                                new RotateTransform(MajorAngle * 180 / Math.PI))
+                            }); 
                             break;
 
                         case DxfEntityType.LwPolyline:
@@ -128,7 +134,7 @@ namespace ToGeometryConverter.Format
 
                             lwPolyLineFigure.StartPoint = Tools.DxfLwVtp(dxfLwPolyline.Vertices[0]);
 
-                            for (int i = 0; i < dxfLwPolyline.Vertices.Count - 1; i+=1)
+                            for (int i = 0; i < dxfLwPolyline.Vertices.Count - 1; i += 1)
                             {
                                 double radian = Math.Atan(dxfLwPolyline.Vertices[i].Bulge) * 4;
                                 double radius = CalBulgeRadius(Tools.DxfLwVtp(dxfLwPolyline.Vertices[i]), Tools.DxfLwVtp(dxfLwPolyline.Vertices[i + 1]), dxfLwPolyline.Vertices[i].Bulge);
@@ -148,9 +154,9 @@ namespace ToGeometryConverter.Format
 
                             lwPolyLineFigure.IsClosed = dxfLwPolyline.IsClosed;
 
-                            Tools.FindInterContour(lwPolyLineFigure);
+                            geometryGroup.Add(Tools.FigureToShape(lwPolyLineFigure));
 
-                             break;
+                            break;
 
                         case DxfEntityType.Polyline:
                             DxfPolyline dxfPolyline = (DxfPolyline)entity;
@@ -159,42 +165,32 @@ namespace ToGeometryConverter.Format
                             polyLineFigure.StartPoint = Tools.Dxftp(dxfPolyline.Vertices[0].Location);
 
                             for (int i = 1; i < dxfPolyline.Vertices.Count; i++)
+                            {
                                 polyLineFigure.Segments.Add(new LineSegment(Tools.Dxftp(dxfPolyline.Vertices[i].Location), true));
+                            }
 
                             polyLineFigure.IsClosed = dxfPolyline.IsClosed;
 
-                            Tools.FindInterContour(polyLineFigure);
+                            geometryGroup.Add(Tools.FigureToShape(polyLineFigure));
                             break;
 
                         case DxfEntityType.Spline:
                             DxfSpline dxfSpline = (DxfSpline)entity;
 
-                            NURBS nurbs = new NURBS();
-                            nurbs.IsBSpline = true;
+                            ObservableCollection<RationalBSplinePoint> rationalBSplinePoints = new ObservableCollection<RationalBSplinePoint>();
 
                             foreach (DxfControlPoint controlPoint in dxfSpline.ControlPoints)
-                                nurbs.WeightedPointSeries.Add(new RationalBSplinePoint(Tools.Dxftp(controlPoint.Point), controlPoint.Weight));
-
-                            PointCollection points = nurbs.BSplineCurve(nurbs.WeightedPointSeries, dxfSpline.DegreeOfCurve, dxfSpline.KnotValues, CRS);
-
-                            PathFigure NURBSCurve = new PathFigure();
-
-                            NURBSCurve.StartPoint = points[0];
-                            for (int i = 1; i < points.Count; i++)
                             {
-                                NURBSCurve.Segments.Add(new LineSegment(points[i], true));
+                                rationalBSplinePoints.Add(new RationalBSplinePoint(Tools.Dxftp(controlPoint.Point), controlPoint.Weight));
                             }
+                            geometryGroup.Add(new NurbsShape(rationalBSplinePoints, dxfSpline.DegreeOfCurve, dxfSpline.KnotValues, CRS, dxfSpline.IsRational == true));
 
-                            NURBSCurve.IsClosed = dxfSpline.IsClosed;
-
-                            if (!NURBSCurve.IsClosed)
-                                NURBSCurve.Segments.Add(new LineSegment(points.Last(), true));
-
-                            Tools.FindInterContour(NURBSCurve);
                             break;
                     }
 
                 }
+
+                return geometryGroup;
             }
         }
 
@@ -216,7 +212,8 @@ namespace ToGeometryConverter.Format
             {
                 return Math.Abs(radius);
             }
-            
+
         }
     }
 }
+

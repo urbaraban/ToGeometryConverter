@@ -6,12 +6,13 @@ using System.Drawing;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace ToGeometryConverter.Format
 {
     public static class Tools
     {
-        public static PathGeometry Geometry { get; set; }
+        //public static PathGeometry Geometry { get; set; }
 
         public static System.Windows.Point Pftp(PointF point)
         {
@@ -38,97 +39,15 @@ namespace ToGeometryConverter.Format
             return new System.Windows.Point(x, y);
         }
 
-        public static void FindInterContour(PathFigure innerFigure)
+        public static PathGeometry MakeTransform(PathGeometry inGmtr)
         {
-            List<string> inArr = GetPArr(innerFigure.ToString());
 
-            if (!innerFigure.IsClosed) 
-            {
-                foreach (PathFigure figure in Geometry.Figures)
-                {
-                    if (!figure.IsClosed)
-                    {
-                        List<string> tempArr = GetPArr(figure.ToString());
-
-                        int MinInd = Math.Min(inArr.First().Length, tempArr.Last().Length) - 1;
-
-                        if (CheckPointString(tempArr.Last().Split(';'),inArr.First().Split(';')))
-                        {
-                            for (int i = 0; i < innerFigure.Segments.Count; i++)
-                                figure.Segments.Add(innerFigure.Segments[i]);
-                            return;
-
-                        }
-                        else if (CheckPointString(tempArr.First().Split(';'), inArr.Last().Split(';')))
-                        {
-                            figure.StartPoint = innerFigure.StartPoint;
-                            for (int i = innerFigure.Segments.Count - 1; i > -1; i--)
-                                figure.Segments.Insert(0, innerFigure.Segments[i]);
-                            return;
-                        }
-                        else if (CheckPointString(tempArr.First().Split(';'), inArr.First().Split(';')))
-                        {
-                            Console.WriteLine("invertFirst " + tempArr.First() + " " + tempArr.First());
-                            Geometry.Figures.Add(innerFigure);
-                            return;
-                        }
-                        else if (CheckPointString(tempArr.Last().Split(';'), inArr.Last().Split(';')))
-                        {
-                            Console.WriteLine("InvertLast " + tempArr.Last() + " " + tempArr.Last());
-                            Geometry.Figures.Add(innerFigure);
-                            return;
-                        }
-                    }
-                }
-            }
-
-            Geometry.Figures.Add(innerFigure);
-
-            bool CheckPointString(string[] Point1, string[] Point2)
-            {
-                int min0 = Math.Min(Point1[0].Length, Point2[0].Length) - 4;
-                int min1 = Math.Min(Point1[1].Length, Point2[1].Length) - 4;
-                double P1X = double.Parse(Point1[0]);
-                double P1Y = double.Parse(Point1[1]);
-                double P2X = double.Parse(Point2[0]);
-                double P2Y = double.Parse(Point2[1]);
-
-                return Math.Round(P1X, 2) == Math.Round(P2X, 2) && Math.Round(P1Y, 2) == Math.Round(P2Y, 2);
-            }
-
-            List<string> GetPArr(string str)
-            {
-                string[] ArrStr = Regex.Split(str, @"[a-zA-Z]+");
-
-                List<string> ListStr = new List<string>();
-
-                for (int i = 0; i < ArrStr.Length; i++)
-                {
-                    if (ArrStr[i] != string.Empty)
-                    {
-                        string[] PointArr = ArrStr[i].Split(';');
-
-                        if (PointArr.Length >= 2)
-                        for (int j = PointArr.Length - 2; j < PointArr.Length; j += 2)
-                        {
-                            ListStr.Add(PointArr[j].Split(' ').Last() + ";" + PointArr[j + 1].Split(' ').Last());
-                        }
-                    }
-                }
-
-                return ListStr;
-            }
-        }
-
-        public static PathGeometry MakeTransform (PathGeometry inGmtr)
-        {
-            
             TransformGroup Transform = new TransformGroup();
 
             TranslateTransform Translate = new TranslateTransform();
             RotateTransform Rotate = new RotateTransform();
             ScaleTransform Scale = new ScaleTransform();
-            
+
             Transform.Children.Add(Scale);
             Transform.Children.Add(Rotate);
             Transform.Children.Add(Translate);
@@ -144,6 +63,23 @@ namespace ToGeometryConverter.Format
         public static double Lenth(System.Windows.Point point1, System.Windows.Point point2)
         {
             return Math.Sqrt(Math.Pow(point2.X - point1.X, 2) + Math.Pow(point2.Y - point1.Y, 2));
+        }
+
+        public static Path FigureToShape(PathFigure pathFigure)
+        {
+            PathGeometry pathGeometry = new PathGeometry();
+            pathGeometry.Figures.Add(pathFigure);
+            pathGeometry.FillRule = FillRule.Nonzero;
+
+            return GeometryToShape(pathGeometry);
+        }
+
+        public static Path GeometryToShape(Geometry geometry)
+        {
+            return new Path
+            {
+                Data = geometry
+            }; 
         }
     }
 }
