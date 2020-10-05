@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 using System.Linq;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using ToGeometryConverter.Object;
@@ -26,8 +27,9 @@ namespace ToGeometryConverter.Format
                     dxfFile = DxfFile.Load(fs);
                 };
             }
-            catch
+            catch (Exception e)
             {
+                MessageBox.Show(e.Message);
                 dxfFile = null;
             }
 
@@ -70,6 +72,23 @@ namespace ToGeometryConverter.Format
                             contour.Segments.Add(new LineSegment(Tools.Dxftp(line.P2), true));
                             geometryGroup.Add(
                                 Tools.FigureToShape(contour));
+                            break;
+
+                        case DxfEntityType.Helix:
+                            DxfHelix dxfHelix = (DxfHelix)entity;
+
+                            PointCollection points = new PointCollection(GetSpiralPoints(dxfHelix));
+
+                            geometryGroup.Add(
+                                Tools.FigureToShape(new PathFigure() 
+                                { 
+                                    StartPoint = Tools.Dxftp(dxfHelix.AxisBasePoint),
+                                    Segments = new PathSegmentCollection()
+                                    {
+                                        new PolyLineSegment(points, true)
+                                    }
+                                }));
+
                             break;
 
                         case DxfEntityType.MLine:
@@ -213,6 +232,40 @@ namespace ToGeometryConverter.Format
                 return Math.Abs(radius);
             }
 
+        }
+
+        private static List<Point> GetSpiralPoints(DxfHelix dxfHelix)
+        {
+            double StartAngle = Math.PI * 2 - Math.Atan2(dxfHelix.AxisBasePoint.Y - dxfHelix.StartPoint.Y, dxfHelix.AxisBasePoint.X - dxfHelix.StartPoint.X);
+
+            double HelixRadius = Math.Max(Math.Abs(dxfHelix.AxisBasePoint.X - dxfHelix.StartPoint.X), Math.Abs(dxfHelix.AxisBasePoint.Y - dxfHelix.StartPoint.Y));
+
+            double EndAngle = StartAngle + 2 * Math.PI * dxfHelix.NumberOfTurns;
+
+            // Get the points.
+            List<Point> points = new List<Point>();
+
+            double dtheta = (dxfHelix.NumberOfTurns * Math.PI * 2)/ 20 * (dxfHelix.IsRightHanded ? 1 : -1);    // Five degrees.
+            for (int i = 1; i <= 20; i++)
+            {
+                double theta = (StartAngle + dtheta * i);
+                // Calculate r.
+                double r = HelixRadius * theta / (2 * Math.PI);
+
+                // Convert to Cartesian coordinates.
+                double x = r * Math.Cos(theta);
+                double y = -r * Math.Sin(theta);
+
+                // Center.
+
+                   x += dxfHelix.AxisBasePoint.X;
+                   y -= dxfHelix.AxisBasePoint.Y;
+                
+                // Create the point.
+                points.Add(new Point(x, y));
+            }
+            points.Reverse();
+            return points;
         }
     }
 }

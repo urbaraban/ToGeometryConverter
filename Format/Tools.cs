@@ -39,26 +39,6 @@ namespace ToGeometryConverter.Format
             return new System.Windows.Point(x, y);
         }
 
-        public static PathGeometry MakeTransform(PathGeometry inGmtr)
-        {
-
-            TransformGroup Transform = new TransformGroup();
-
-            TranslateTransform Translate = new TranslateTransform();
-            RotateTransform Rotate = new RotateTransform();
-            ScaleTransform Scale = new ScaleTransform();
-
-            Transform.Children.Add(Scale);
-            Transform.Children.Add(Rotate);
-            Transform.Children.Add(Translate);
-
-            Rotate.CenterX = inGmtr.Bounds.X + inGmtr.Bounds.Width / 2;
-            Rotate.CenterY = inGmtr.Bounds.Y + inGmtr.Bounds.Height / 2;
-
-            inGmtr.Transform = Transform;
-
-            return inGmtr;
-        }
 
         public static double Lenth(System.Windows.Point point1, System.Windows.Point point2)
         {
@@ -67,11 +47,14 @@ namespace ToGeometryConverter.Format
 
         public static Path FigureToShape(PathFigure pathFigure)
         {
-            PathGeometry pathGeometry = new PathGeometry();
-            pathGeometry.Figures.Add(pathFigure);
-            pathGeometry.FillRule = FillRule.Nonzero;
-
-            return GeometryToShape(pathGeometry);
+            return GeometryToShape(new PathGeometry()
+            {
+                Figures = new PathFigureCollection()
+                {
+                    pathFigure
+                },
+                FillRule = FillRule.Nonzero 
+            });;
         }
 
         public static Path GeometryToShape(Geometry geometry)
