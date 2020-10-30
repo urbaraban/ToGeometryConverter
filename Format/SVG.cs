@@ -1,5 +1,7 @@
 ﻿using Svg;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -11,7 +13,7 @@ namespace ToGeometryConverter.Format
 {
     public static class SVG
     {
-        public static List<Shape> Get(string filepath)
+        public static List<Shape> Get(string filepath, bool Tesselate)
         {           
             SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
 
@@ -31,11 +33,65 @@ namespace ToGeometryConverter.Format
                                 SvgPolygon polygon = (SvgPolygon)svgElement;
                                 PathFigure pathPolygon = new PathFigure();
 
-                                pathPolygon.StartPoint = Tools.Dbltp(polygon.Points[0], polygon.Points[1]);
+                                pathPolygon.StartPoint = new Point(polygon.Points[0], polygon.Points[1]);
 
                                 for (int i = 2; i < polygon.Points.Count; i += 2)
                                 {
-                                    pathPolygon.Segments.Add(new LineSegment(Tools.Dbltp(polygon.Points[i].Value, polygon.Points[i + 1].Value), true));
+                                    if (Tesselate && (polygon.Points.Count - i > 3))
+                                    {
+                                        double lastAngle = Tools.GetAngleThreePoint(new Point(polygon.Points[i - 2], polygon.Points[i - 1]), new Point(polygon.Points[i], polygon.Points[i + 1]), new Point(polygon.Points[i + 2], polygon.Points[i + 3]));
+
+                                        if (Math.Abs(lastAngle) > 110)
+                                        {
+                                            List<Point> TesselatePoints = new List<Point>();
+                                            TesselatePoints.Add(new Point(polygon.Points[i - 2], polygon.Points[i - 1]));
+                                            TesselatePoints.Add(new Point(polygon.Points[i], polygon.Points[i + 1]));
+
+                                            for (int j = i + 2; polygon.Points.Count - j > 1; j += 2)
+                                            {
+                                                double tempAngle = Tools.GetAngleThreePoint(TesselatePoints[TesselatePoints.Count - 2], TesselatePoints[TesselatePoints.Count - 1], new Point(polygon.Points[j], polygon.Points[j + 1]));
+
+                                                if (Math.Abs(Math.Round(lastAngle) - Math.Round(tempAngle)) < 1)
+                                                {
+                                                    TesselatePoints.Add(new Point(polygon.Points[j], polygon.Points[j + 1]));
+                                                }
+                                                else
+                                                {
+                                                    break;
+                                                }
+                                            }
+
+                                            if (TesselatePoints.Count >= 4)
+                                            {
+                                                if (TesselatePoints.First().X == TesselatePoints.Last().X && TesselatePoints.First().Y == TesselatePoints.Last().Y)
+                                                {
+                                                    geometryGroup.Add(Tools.GetEllipseFromList(TesselatePoints));
+                                                    i += TesselatePoints.Count * 2;
+                                                }
+                                                else
+                                                {
+                                                    pathPolygon.Segments.Add(Tools.GetArcSegmentFromList(TesselatePoints));
+                                                    i += (TesselatePoints.Count - 1) * 2;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                for (int k = 0; k < TesselatePoints.Count - 1; k += 1)
+                                                {
+                                                    pathPolygon.Segments.Add(new LineSegment(TesselatePoints[k], true));
+                                                }
+                                            }
+                                            
+                                        }
+                                        else
+                                        {
+                                            pathPolygon.Segments.Add(new LineSegment(new Point(polygon.Points[i], polygon.Points[i + 1]), true));
+                                        }
+                                    }
+                                    else
+                                    {
+                                        pathPolygon.Segments.Add(new LineSegment(new Point(polygon.Points[i], polygon.Points[i + 1]), true));
+                                    }
                                 }
                                 pathPolygon.IsClosed = true;
                                 geometryGroup.Add(Tools.FigureToShape(pathPolygon));
@@ -45,7 +101,7 @@ namespace ToGeometryConverter.Format
                                 SvgCircle circle = (SvgCircle)svgElement;
                                 geometryGroup.Add(new Path
                                 {
-                                    Data = new EllipseGeometry(Tools.Dbltp(circle.CenterX, circle.CenterY), circle.Radius, circle.Radius)
+                                    Data = new EllipseGeometry(new Point(circle.CenterX, circle.CenterY), circle.Radius, circle.Radius)
                                 });
                                 break;
 
@@ -53,7 +109,7 @@ namespace ToGeometryConverter.Format
                                 SvgEllipse ellipse = (SvgEllipse)svgElement;
                                 geometryGroup.Add(new Path
                                 {
-                                    Data = new EllipseGeometry(Tools.Dbltp(ellipse.CenterX, ellipse.CenterY), ellipse.RadiusX, ellipse.RadiusY)
+                                    Data = new EllipseGeometry(new Point(ellipse.CenterX, ellipse.CenterY), ellipse.RadiusX, ellipse.RadiusY)
                                 });
                                 break;
 
@@ -62,15 +118,15 @@ namespace ToGeometryConverter.Format
                                 geometryGroup.Add(
                                     new Path
                                     {
-                                        Data = new RectangleGeometry(new Rect(Tools.Dbltp(rectangle.X, rectangle.Y), new Size(rectangle.Width, rectangle.Height)))
+                                        Data = new RectangleGeometry(new Rect(new Point(rectangle.X, rectangle.Y), new Size(rectangle.Width, rectangle.Height)))
                                     });
                                 break;
 
                             case "Svg.SvgLine":
                                 SvgLine line = (SvgLine)svgElement;
                                 PathFigure pathLine = new PathFigure();
-                                pathLine.StartPoint = Tools.Dbltp(line.StartX, line.StartY);
-                                pathLine.Segments.Add(new LineSegment(Tools.Dbltp(line.EndX, line.EndY), true));
+                                pathLine.StartPoint = new Point(line.StartX, line.StartY);
+                                pathLine.Segments.Add(new LineSegment(new Point(line.EndX, line.EndY), true));
                                 geometryGroup.Add(Tools.FigureToShape(pathLine));
                                 break;
 
