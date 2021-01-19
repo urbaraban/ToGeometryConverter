@@ -75,7 +75,7 @@ namespace ToGeometryConverter.Format
                         case DxfEntityType.Helix:
                             DxfHelix dxfHelix = (DxfHelix)entity;
 
-                            PointCollection points = new PointCollection(GetSpiralPoints(dxfHelix));
+                            PointCollection points = new PointCollection(GetSpiralPoints(dxfHelix, CRS));
 
                             geometryGroup.Add(
                                 Tools.FigureToShape(new PathFigure() 
@@ -232,23 +232,32 @@ namespace ToGeometryConverter.Format
 
         }
 
-        private static List<Point> GetSpiralPoints(DxfHelix dxfHelix)
+        /// <summary>
+        /// Get point from helix by step
+        /// </summary>
+        /// <param name="dxfHelix"></param>
+        /// <returns></returns>
+        private static List<Point> GetSpiralPoints(DxfHelix dxfHelix, double CRS)
         {
-            double StartAngle = Math.PI * 2 - Math.Atan2(dxfHelix.AxisBasePoint.Y - dxfHelix.StartPoint.Y, dxfHelix.AxisBasePoint.X - dxfHelix.StartPoint.X);
+            double StartAngle = Math.Atan2(dxfHelix.AxisBasePoint.Y - dxfHelix.StartPoint.Y, dxfHelix.AxisBasePoint.X - dxfHelix.StartPoint.X);
 
-            double HelixRadius = Math.Max(Math.Abs(dxfHelix.AxisBasePoint.X - dxfHelix.StartPoint.X), Math.Abs(dxfHelix.AxisBasePoint.Y - dxfHelix.StartPoint.Y));
-
-            double EndAngle = StartAngle + 2 * Math.PI * dxfHelix.NumberOfTurns;
+            double HelixRadius = Tools.Lenth(new Point(dxfHelix.AxisBasePoint.X, dxfHelix.AxisBasePoint.Y), new Point(dxfHelix.StartPoint.X, dxfHelix.StartPoint.Y));
 
             // Get the points.
             List<Point> points = new List<Point>();
 
-            double dtheta = (dxfHelix.NumberOfTurns * Math.PI * 2)/ 20 * (dxfHelix.IsRightHanded ? 1 : -1);    // Five degrees.
-            for (int i = 1; i <= 20; i++)
+            int steps = (int)((2 * Math.PI * HelixRadius)/CRS);
+
+            double dtheta = Math.PI * 2 / steps * (dxfHelix.IsRightHanded ? -1 : 1);    // Five degrees.
+
+            for (int i = 1; Math.Abs(dtheta * i)/ (Math.PI * 2) <= dxfHelix.NumberOfTurns; i++)
             {
                 double theta = (StartAngle + dtheta * i);
+                Console.WriteLine($"Th: {theta.ToString()}/{Math.PI * 2 * dxfHelix.NumberOfTurns}");
                 // Calculate r.
-                double r = HelixRadius * theta / (2 * Math.PI);
+                double r = HelixRadius / (steps * dxfHelix.NumberOfTurns) * i;
+
+                Console.WriteLine($"R: {r.ToString()}/{HelixRadius}");
 
                 // Convert to Cartesian coordinates.
                 double x = r * Math.Cos(theta);
@@ -262,7 +271,7 @@ namespace ToGeometryConverter.Format
                 // Create the point.
                 points.Add(new Point(x, y));
             }
-            points.Reverse();
+            //points.Reverse();
             return points;
         }
     }

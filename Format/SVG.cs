@@ -5,7 +5,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using ToGeometryConverter.Object;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
 
