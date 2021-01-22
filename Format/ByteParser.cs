@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace ToGeometryConverter.Format
@@ -8,7 +9,6 @@ namespace ToGeometryConverter.Format
     {
         protected String location;
         public byte[] b { get; private set; }
-
 
         public int position { get; private set; } = 0;
 
@@ -31,46 +31,59 @@ namespace ToGeometryConverter.Format
 
         }
 
-        public byte parseByte()
+        public ByteParser(byte[] B)
+        {
+            this.b = B;
+            this.position = 0;
+        }
+
+        public byte GetByte()
         {
             return (byte)(b[position++] & 0xff);
         }
 
-        public short parseShort()
+        public short GetShort()
         {
-            return (short)(b[position++] << 8 | (b[position++] & 0xff));
+            return BitConverter.ToInt16(b, position += 2);
         }
-        public float parseFloat()
+
+        public float GetFloat()
         {
-            byte[] bts = 
+            return BitConverter.ToSingle(b, position += 4);
+        }
+
+        public double GetDouble()
+        {
+            return BitConverter.ToDouble(b, position += 8);
+        }
+
+        public ulong GetLong(bool reverce)
+        {
+            ulong temp = BitConverter.ToUInt64(
+                reverce == true ? this.GetByte(8).Reverse().ToArray() : this.GetByte(8),
+               reverce == true ? 0 : position);
+            position += 8;
+            return temp;
+        }
+
+        public int GetInt()
+        {
+            return BitConverter.ToInt32(b, position += 4);
+        }
+
+        public byte[] GetByte(int lenth)
+        {
+            byte[] temparr = new byte[lenth];
+            for (int i = 0; i < lenth; i += 1)
             {
-                    b[position++],
-                    b[position++],
-                    b[position++],
-                    b[position++]
-            };
-
-            return BitConverter.ToSingle(bts, 0);
+                temparr[i] = b[position + i];
+            }
+            position += lenth;
+            return temparr;
         }
 
-        public double parseDouble()
-        {
-            byte[] bts =
-            {
-                    b[position++],
-                    b[position++],
-                    b[position++],
-                    b[position++],
-                    b[position++],
-                    b[position++],
-                    b[position++],
-                    b[position++]
-            };
 
-            return BitConverter.ToDouble(bts, 0);
-        }
-
-        public string parseString(int length)
+        public string GetString(int length)
         {
             StringBuilder outt = new StringBuilder();
             for (int i = 0; i < length; i++)
@@ -80,15 +93,17 @@ namespace ToGeometryConverter.Format
             return outt.ToString();
         }
 
-        public void skip(int times)
+        public void Skip(int times)
         {
-            for (int i = 0; i < times; i++)
-            {
-                position++;
-            }
+            position += times;
         }
 
-        public void reset()
+        public void Return(int times)
+        {
+            position -= times;
+        }
+
+        public void Reset()
         {
             position = 0;
         }

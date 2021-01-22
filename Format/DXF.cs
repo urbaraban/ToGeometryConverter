@@ -246,16 +246,16 @@ namespace ToGeometryConverter.Format
             // Get the points.
             List<Point> points = new List<Point>();
 
-            int steps = (int)((2 * Math.PI * HelixRadius)/CRS);
+            int steps = (int)((2 * Math.PI * HelixRadius * dxfHelix.NumberOfTurns) /CRS);
 
-            double dtheta = Math.PI * 2 / steps * (dxfHelix.IsRightHanded ? -1 : 1);    // Five degrees.
+            double dtheta = (Math.PI * 2 * dxfHelix.NumberOfTurns) / steps * (dxfHelix.IsRightHanded ? -1 : 1);    // Five degrees.
 
             for (int i = 1; Math.Abs(dtheta * i)/ (Math.PI * 2) <= dxfHelix.NumberOfTurns; i++)
             {
                 double theta = (StartAngle + dtheta * i);
                 Console.WriteLine($"Th: {theta.ToString()}/{Math.PI * 2 * dxfHelix.NumberOfTurns}");
                 // Calculate r.
-                double r = HelixRadius / (steps * dxfHelix.NumberOfTurns) * i;
+                double r = HelixRadius / steps  * i;
 
                 Console.WriteLine($"R: {r.ToString()}/{HelixRadius}");
 
