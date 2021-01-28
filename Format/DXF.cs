@@ -14,6 +14,9 @@ namespace ToGeometryConverter.Format
 {
     public static class DXF
     {
+        public static string Name = "DXF";
+        public static string Short = ".dxf";
+
         public static List<Shape> Get(string filename, double CRS)
 
         {

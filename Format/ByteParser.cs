@@ -15,20 +15,17 @@ namespace ToGeometryConverter.Format
         public ByteParser(String location)
         {
             this.location = location;
-
-            using (BinaryReader reader = new BinaryReader(File.Open(location, FileMode.Open)))
+            try
             {
-                try
+                using (BinaryReader reader = new BinaryReader(File.Open(location, FileMode.Open)))
                 {
                     b = reader.ReadBytes((int)reader.BaseStream.Length);
                 }
-                catch (Exception e)
-                {
-                    b = null;
-
-                }
             }
-
+            catch (Exception e)
+            {
+                b = null;
+            }
         }
 
         public ByteParser(byte[] B)
@@ -106,6 +103,16 @@ namespace ToGeometryConverter.Format
         public void Reset()
         {
             position = 0;
+        }
+
+        public static string ReaderStringLenth(BinaryReader reader, long length)
+        {
+            StringBuilder outt = new StringBuilder();
+            for (long i = 0; i < length; i++)
+            {
+                outt.Append(reader.ReadChar());
+            }
+            return outt.ToString();
         }
     }
 }
