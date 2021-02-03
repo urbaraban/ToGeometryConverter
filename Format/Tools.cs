@@ -4,10 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace ToGeometryConverter.Format
 {
@@ -65,24 +63,16 @@ namespace ToGeometryConverter.Format
             return Math.Sqrt(Math.Pow(point2.X - point1.X, 2) + Math.Pow(point2.Y - point1.Y, 2));
         }
 
-        public static Path FigureToShape(PathFigure pathFigure)
+        public static Geometry FigureToGeometry(PathFigure pathFigure)
         {
-            return GeometryToShape(new PathGeometry()
+            return new PathGeometry()
             {
                 Figures = new PathFigureCollection()
                 {
                     pathFigure
                 },
-                FillRule = FillRule.Nonzero 
-            });;
-        }
-
-        public static Path GeometryToShape(Geometry geometry)
-        {
-            return new Path
-            {
-                Data = geometry
-            }; 
+                FillRule = FillRule.Nonzero
+            };
         }
 
         internal static PathSegment GetArcSegmentFromList(List<System.Windows.Point> tesselatePoints)
@@ -112,11 +102,6 @@ namespace ToGeometryConverter.Format
             return new ArcSegment(C, new System.Windows.Size(radius, radius), rotationAngle,
                 isLarge, sweepDirection, true);
 
-        }
-
-        internal static Shape GetEllipseFromList(List<System.Windows.Point> tesselatePoints)
-        {
-            return Tools.GeometryToShape(new EllipseGeometry());
         }
     }
 }

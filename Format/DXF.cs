@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using ToGeometryConverter.Object;
 using Size = System.Windows.Size;
 
@@ -17,7 +16,7 @@ namespace ToGeometryConverter.Format
         public static string Name = "DXF";
         public static string Short = ".dxf";
 
-        public static List<Shape> Get(string filename, double CRS)
+        public static GeometryGroup Get(string filename, double CRS)
 
         {
             DxfFile dxfFile;
@@ -42,9 +41,9 @@ namespace ToGeometryConverter.Format
 
             return null;
 
-            List<Shape> ParseEntities(IList<DxfEntity> entitys)
+            GeometryGroup ParseEntities(IList<DxfEntity> entitys)
             {
-                List<Shape> geometryGroup = new List<Shape>();
+                GeometryGroup geometryGroup = new GeometryGroup();
 
                 foreach (DxfEntity entity in entitys)
                 {
@@ -68,11 +67,7 @@ namespace ToGeometryConverter.Format
 
                         case DxfEntityType.Line:
                             DxfLine line = (DxfLine)entity;
-                            PathFigure contour = new PathFigure();
-                            contour.StartPoint = Tools.Dxftp(line.P1);
-                            contour.Segments.Add(new LineSegment(Tools.Dxftp(line.P2), true));
-                            geometryGroup.Add(
-                                Tools.FigureToShape(contour));
+                            geometryGroup.Children.Add(new LineGeometry(Tools.Dxftp(line.P1), Tools.Dxftp(line.P2)));
                             break;
 
                         case DxfEntityType.Helix:
@@ -80,8 +75,8 @@ namespace ToGeometryConverter.Format
 
                             PointCollection points = new PointCollection(GetSpiralPoints(dxfHelix, CRS));
 
-                            geometryGroup.Add(
-                                Tools.FigureToShape(new PathFigure() 
+                            geometryGroup.Children.Add(
+                                Tools.FigureToGeometry(new PathFigure() 
                                 { 
                                     StartPoint = Tools.Dxftp(dxfHelix.AxisBasePoint),
                                     Segments = new PathSegmentCollection()
@@ -103,8 +98,8 @@ namespace ToGeometryConverter.Format
                                     Tools.Dxftp(dxfMLine.Vertices[i % dxfMLine.Vertices.Count]), true));
 
                             MLineFigure.IsClosed = MLineFigure.IsClosed;
-                            geometryGroup.Add(
-                                Tools.FigureToShape(MLineFigure));
+                            geometryGroup.Children.Add(
+                                Tools.FigureToGeometry(MLineFigure));
 
                             break;
 
@@ -125,14 +120,12 @@ namespace ToGeometryConverter.Format
                                                 SweepDirection.Counterclockwise,
                                                 true));
 
-                            geometryGroup.Add(Tools.FigureToShape(ArcContour));
+                            geometryGroup.Children.Add(Tools.FigureToGeometry(ArcContour));
                             break;
 
                         case DxfEntityType.Circle:
                             DxfCircle dxfCircle = (DxfCircle)entity;
-                            geometryGroup.Add(new Path{
-                               Data = new EllipseGeometry(Tools.Dxftp(dxfCircle.Center), dxfCircle.Radius, dxfCircle.Radius)
-                            });
+                            geometryGroup.Children.Add(new EllipseGeometry(Tools.Dxftp(dxfCircle.Center), dxfCircle.Radius, dxfCircle.Radius));
                             break;
 
                         case DxfEntityType.Ellipse:
@@ -140,12 +133,11 @@ namespace ToGeometryConverter.Format
 
                             double MajorAngle = (Math.PI * 2 - Math.Atan((dxfEllipse.MajorAxis.Y) / (dxfEllipse.MajorAxis.X))) % (2 * Math.PI);
 
-                            geometryGroup.Add(new Path{
-                                Data = new EllipseGeometry(Tools.Dxftp(dxfEllipse.Center),
+                            geometryGroup.Children.Add(
+                                new EllipseGeometry(Tools.Dxftp(dxfEllipse.Center),
                                 dxfEllipse.MajorAxis.Length,
                                 dxfEllipse.MajorAxis.Length * dxfEllipse.MinorAxisRatio,
-                                new RotateTransform(MajorAngle * 180 / Math.PI))
-                            }); 
+                                new RotateTransform(MajorAngle * 180 / Math.PI))); 
                             break;
 
                         case DxfEntityType.LwPolyline:
@@ -174,7 +166,7 @@ namespace ToGeometryConverter.Format
 
                             lwPolyLineFigure.IsClosed = dxfLwPolyline.IsClosed;
 
-                            geometryGroup.Add(Tools.FigureToShape(lwPolyLineFigure));
+                            geometryGroup.Children.Add(Tools.FigureToGeometry(lwPolyLineFigure));
 
                             break;
 
@@ -191,7 +183,7 @@ namespace ToGeometryConverter.Format
 
                             polyLineFigure.IsClosed = dxfPolyline.IsClosed;
 
-                            geometryGroup.Add(Tools.FigureToShape(polyLineFigure));
+                            geometryGroup.Children.Add(Tools.FigureToGeometry(polyLineFigure));
                             break;
 
                         case DxfEntityType.Spline:
@@ -203,7 +195,7 @@ namespace ToGeometryConverter.Format
                             {
                                 rationalBSplinePoints.Add(new RationalBSplinePoint(Tools.Dxftp(controlPoint.Point), controlPoint.Weight));
                             }
-                            geometryGroup.Add(new NurbsShape(rationalBSplinePoints, dxfSpline.DegreeOfCurve, dxfSpline.KnotValues, CRS, dxfSpline.IsRational == true));
+                            geometryGroup.Children.Add(new NurbsShape(rationalBSplinePoints, dxfSpline.DegreeOfCurve, dxfSpline.KnotValues, CRS, dxfSpline.IsRational == true));
 
                             break;
                     }

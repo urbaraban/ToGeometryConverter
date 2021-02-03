@@ -1,9 +1,5 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 using System.Windows.Media;
-using System.Windows.Shapes;
-using System.Xml;
 
 namespace ToGeometryConverter.Format
 {
@@ -12,11 +8,11 @@ namespace ToGeometryConverter.Format
         public static string Name = "EasyCeiling";
         public static string Short = ".ec";
 
-        public static List<Shape> Get(string filename)
+        public static GeometryGroup Get(string filename)
         {
             if (File.Exists(filename))
             {
-                List<Shape> geometryGroup = new List<Shape>();
+                GeometryGroup geometryGroup = new GeometryGroup();
 
                 ByteParser byteParser = new ByteParser(filename);
 
@@ -46,8 +42,8 @@ namespace ToGeometryConverter.Format
                                 points.Add(new System.Windows.Point(x, -y));
                             }
 
-                            geometryGroup.Add(
-                                            Tools.FigureToShape(new PathFigure()
+                            geometryGroup.Children.Add(
+                                            Tools.FigureToGeometry(new PathFigure()
                                             {
                                                 StartPoint = points[0],
                                                 Segments = new PathSegmentCollection()
