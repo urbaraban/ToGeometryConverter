@@ -9,17 +9,10 @@ using System.Windows.Shapes;
 
 namespace ToGeometryConverter.Object
 {
-    public class NurbsShape : Shape
+    public class NurbsShape
     {
         public bool IsClosed { get; set; }
         public bool IsBSpline { get; set; }
-
-        protected override Geometry DefiningGeometry => this.GetGeometry();
-
-        public Geometry Data
-        {
-            get => this.DefiningGeometry;
-        }
 
         // private PathGeometry pathGeometry;
         private ObservableCollection<RationalBSplinePoint> _point;
