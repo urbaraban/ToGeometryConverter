@@ -4,6 +4,7 @@ using IxMilia.Dxf.Entities;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
 using ToGeometryConverter.Object;
@@ -64,6 +65,21 @@ namespace ToGeometryConverter.Format
                                 }
                             }
                             break;
+
+                        /*case DxfEntityType.Text:
+                            DxfText dxfText = (DxfText)entity;
+                            FormattedText formatted = new FormattedText(dxfText.Value,
+                            CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                            new Typeface("Tahoma"), dxfText.TextHeight * 5, Brushes.Black);
+                            geometryGroup.Children.Add(formatted.BuildGeometry(new Point(dxfText.Location.X, dxfText.Location.Y)));
+                            break;
+                        case DxfEntityType.MText:
+                            DxfMText dxfMText = (DxfMText)entity;
+                            FormattedText Mformatted = new FormattedText(dxfMText.Text,
+                            CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                            new Typeface("Tahoma"), dxfMText.InitialTextHeight, Brushes.Black);
+                            geometryGroup.Children.Add(Mformatted.BuildGeometry(new Point(dxfMText.InsertionPoint.X, dxfMText.InsertionPoint.Y)));
+                            break;*/
 
                         case DxfEntityType.Line:
                             DxfLine line = (DxfLine)entity;

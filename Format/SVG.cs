@@ -1,6 +1,7 @@
 ﻿using Svg;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
@@ -45,6 +46,13 @@ namespace ToGeometryConverter.Format
 
                             case SvgCircle circle:
                                 geometryGroup.Children.Add(new EllipseGeometry(new Point(circle.CenterX, circle.CenterY), circle.Radius, circle.Radius));
+                                break;
+
+                            case SvgText text:
+                                FormattedText formatted = new FormattedText(text.Text,
+                                CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                                new Typeface("Tahoma"), text.FontSize * 5, Brushes.Black);
+                                geometryGroup.Children.Add(formatted.BuildGeometry(new Point(text.Bounds.X, text.Bounds.Y)));
                                 break;
 
                             case SvgEllipse ellipse:
