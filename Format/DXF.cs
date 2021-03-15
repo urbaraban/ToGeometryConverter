@@ -100,7 +100,6 @@ namespace ToGeometryConverter.Format
                                         new PolyLineSegment(points, true)
                                     }
                                 }));
-
                             break;
 
                         case DxfEntityType.MLine:
@@ -146,9 +145,7 @@ namespace ToGeometryConverter.Format
 
                         case DxfEntityType.Ellipse:
                             DxfEllipse dxfEllipse = (DxfEllipse)entity;
-
                             double MajorAngle = (Math.PI * 2 - Math.Atan((dxfEllipse.MajorAxis.Y) / (dxfEllipse.MajorAxis.X))) % (2 * Math.PI);
-
                             geometryGroup.Children.Add(
                                 new EllipseGeometry(Tools.Dxftp(dxfEllipse.Center),
                                 dxfEllipse.MajorAxis.Length,

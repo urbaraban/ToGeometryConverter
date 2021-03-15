@@ -1,8 +1,6 @@
 ﻿using Svg;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Point = System.Windows.Point;
@@ -40,7 +38,7 @@ namespace ToGeometryConverter.Format
                                     pathPolygon.Segments.Add(new LineSegment(new Point(polygon.Points[i], polygon.Points[i + 1]), true));
 
                                 }
-                                pathPolygon.IsClosed = true;
+                                pathPolygon.IsClosed = !(svgElement is SvgPolyline);
                                 geometryGroup.Children.Add(Tools.FigureToGeometry(pathPolygon));
                                 break;
 
@@ -73,7 +71,7 @@ namespace ToGeometryConverter.Format
                             case SvgPath path:
                                 PathGeometry pathPath = new PathGeometry();
                                 PathFigure contourPath = new PathFigure();
-                                contourPath.IsClosed = true;
+                                contourPath.IsClosed = contourPath.IsClosed;
                                 for (int i = 0; i < path.PathData.Count; i++)
                                 {
                                     switch (path.PathData[i].GetType().FullName)
