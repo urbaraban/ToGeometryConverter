@@ -4,7 +4,6 @@ using IxMilia.Dxf.Entities;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
 using ToGeometryConverter.Object;
@@ -12,10 +11,10 @@ using Size = System.Windows.Size;
 
 namespace ToGeometryConverter.Format
 {
-    public static class DXF
+    public class DXF : IFormat
     {
-        public static string Name = "DXF";
-        public static string Short = ".dxf";
+        public string Name { get; } = "DXF";
+        public string[] ShortName { get; } = new string[1] { ".dxf" };
 
         public static GeometryGroup Get(string filename, double CRS)
 

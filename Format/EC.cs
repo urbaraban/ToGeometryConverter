@@ -3,10 +3,10 @@ using System.Windows.Media;
 
 namespace ToGeometryConverter.Format
 {
-    public static class EC
+    public class EC : IFormat
     {
-        public static string Name = "EasyCeiling";
-        public static string Short = ".ec";
+        public string Name { get; } = "EasyCeiling";
+        public string[] ShortName { get; } = new string[1] { ".ec" };
 
         public static GeometryGroup Get(string filename)
         {

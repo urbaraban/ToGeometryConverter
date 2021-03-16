@@ -8,10 +8,11 @@ using Size = System.Windows.Size;
 
 namespace ToGeometryConverter.Format
 {
-    public static class SVG
+    public class SVG : IFormat
     {
-        public static string Name = "Vector";
-        public static string Short = ".svg";
+        public string Name { get; } = "Vector";
+        public string[] ShortName { get; } = new string[1] { ".svg" };
+
         public static GeometryGroup Get(string filepath, bool Tesselate)
         {           
             SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
