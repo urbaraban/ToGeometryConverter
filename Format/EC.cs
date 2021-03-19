@@ -6,9 +6,9 @@ namespace ToGeometryConverter.Format
     public class EC : IFormat
     {
         public string Name { get; } = "EasyCeiling";
-        public string[] ShortName { get; } = new string[1] { ".ec" };
+        public string[] ShortName { get; } = new string[1] { "ec" };
 
-        public static GeometryGroup Get(string filename)
+        public GeometryGroup Get(string filename, double RoundStep)
         {
             if (File.Exists(filename))
             {

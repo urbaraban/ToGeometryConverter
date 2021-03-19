@@ -4,7 +4,9 @@ namespace ToGeometryConverter.Format
 {
     interface IFormat
     {
-        string Name { get; }
-        string[] ShortName { get; }
+        public string Name { get; }
+        public string[] ShortName { get; }
+
+        public GeometryGroup Get(string Filename, double RoundStep);
     }
 }

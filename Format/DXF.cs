@@ -13,10 +13,10 @@ namespace ToGeometryConverter.Format
 {
     public class DXF : IFormat
     {
-        public string Name { get; } = "DXF";
-        public string[] ShortName { get; } = new string[1] { ".dxf" };
+        string IFormat.Name => "DXF";
+        string[] IFormat.ShortName => new string[1] { "dxf" };
 
-        public static GeometryGroup Get(string filename, double CRS)
+        public GeometryGroup Get(string filename, double CRS)
 
         {
             DxfFile dxfFile;
@@ -218,7 +218,7 @@ namespace ToGeometryConverter.Format
             }
         }
 
-        private static double CalBulgeRadius(System.Windows.Point point1, System.Windows.Point point2, double bulge)
+        private double CalBulgeRadius(System.Windows.Point point1, System.Windows.Point point2, double bulge)
         {
             // Calculate the vertex angle
             double cicleAngle = Math.Atan(bulge) * 4;
@@ -244,7 +244,7 @@ namespace ToGeometryConverter.Format
         /// </summary>
         /// <param name="dxfHelix"></param>
         /// <returns></returns>
-        private static List<Point> GetSpiralPoints(DxfHelix dxfHelix, double CRS)
+        private List<Point> GetSpiralPoints(DxfHelix dxfHelix, double CRS)
         {
             double StartAngle = Math.Atan2(dxfHelix.AxisBasePoint.Y - dxfHelix.StartPoint.Y, dxfHelix.AxisBasePoint.X - dxfHelix.StartPoint.X);
 

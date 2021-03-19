@@ -99,11 +99,11 @@
   <ItemGroup>
     <Compile Include="Format\ByteParser.cs" />
     <Compile Include="Format\DCeiling.cs" />
-    <Compile Include="Format\DWG.cs" />
     <Compile Include="Format\DXF.cs" />
     <Compile Include="Format\EC.cs" />
     <Compile Include="Format\IFormat.cs" />
     <Compile Include="Format\IGES.cs" />
+    <Compile Include="ToGC.cs" />
     <Compile Include="Format\Tools.cs" />
     <Compile Include="Object\NurbsShape.cs" />
     <Compile Include="Object\RationalBSplinePoint.cs" />
@@ -115,6 +115,11 @@
     <None Include="packages.config" />
     <None Include="Togeometrykey.pfx" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\..\iges\src\IxMilia.Iges\IxMilia.Iges.csproj">
+      <Project>{EDB8FB15-5411-47F8-804A-EC0F696CD4E4}</Project>
+      <Name>IxMilia.Iges</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -11,9 +11,9 @@ namespace ToGeometryConverter.Format
     public class SVG : IFormat
     {
         public string Name { get; } = "Vector";
-        public string[] ShortName { get; } = new string[1] { ".svg" };
+        public string[] ShortName { get; } = new string[1] { "svg" };
 
-        public static GeometryGroup Get(string filepath, bool Tesselate)
+        public GeometryGroup Get(string filepath, double RoundStep)
         {           
             SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
 

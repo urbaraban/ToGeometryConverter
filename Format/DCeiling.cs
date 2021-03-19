@@ -8,15 +8,15 @@ namespace ToGeometryConverter.Format
     public class DCeiling : IFormat
     {
         public string Name { get; } = "DEXCeil";
-        public string[] ShortName { get; } = new string[1] { ".dc" };
+        public string[] ShortName { get; } = new string[1] { "dc" };
 
-        public static GeometryGroup Get(string filename)
+        public GeometryGroup Get(string Filename, double RoundStep)
         {
-            if (File.Exists(filename))
+            if (File.Exists(Filename))
             {
                 GeometryGroup geometryGroup = new GeometryGroup();
 
-                using (BinaryReader reader = new BinaryReader(File.Open(filename, FileMode.Open), Encoding.ASCII))
+                using (BinaryReader reader = new BinaryReader(File.Open(Filename, FileMode.Open), Encoding.ASCII))
                 {
                     reader.BaseStream.Position += 54;
                     //logo 
@@ -76,7 +76,7 @@ namespace ToGeometryConverter.Format
             return null;
         }
 
-        private static string ReadNullTerminatedString(System.IO.BinaryReader stream)
+        private string ReadNullTerminatedString(System.IO.BinaryReader stream)
         {
             string str = "";
             char ch;
