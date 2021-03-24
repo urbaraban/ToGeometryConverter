@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{1EDBFBC8-4A81-4530-9BC6-B4C475E53E3C}</ProjectGuid>
+    <ProjectGuid>{5A574092-3854-4F62-BFC4-A1336C16B564}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ToGeometryConverter</RootNamespace>
