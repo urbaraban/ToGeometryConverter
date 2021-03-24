@@ -1,5 +1,8 @@
-﻿using System.IO;
-using System.Windows.Media;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Windows;
+using System.Windows.Media.Media3D;
+using ToGeometryConverter.Object;
 
 namespace ToGeometryConverter.Format
 {
@@ -8,12 +11,10 @@ namespace ToGeometryConverter.Format
         public string Name { get; } = "EasyCeiling";
         public string[] ShortName { get; } = new string[1] { "ec" };
 
-        public GeometryGroup Get(string filename, double RoundStep)
+        public GCCollection Get(string filename, double RoundStep)
         {
             if (File.Exists(filename))
             {
-                GeometryGroup geometryGroup = new GeometryGroup();
-
                 ByteParser byteParser = new ByteParser(filename);
 
                 if (byteParser.b != null)
@@ -22,7 +23,7 @@ namespace ToGeometryConverter.Format
 
                     int startVer = XYFind.IndexOf("VerFile") + 7;
 
-                    double Version = double.Parse(XYFind.Substring(startVer, 5).Replace("\n", string.Empty).Replace('.',','));
+                    double Version = double.Parse(XYFind.Substring(startVer, 5).Replace("\n", string.Empty).Replace('.', ','));
 
                     if (Version < 147)
                     {
@@ -33,27 +34,24 @@ namespace ToGeometryConverter.Format
 
                             string[] coord = XYFind.Substring(start, end - start - 1).Split('\n');
 
-                            PointCollection points = new PointCollection();
+                            List<Point3D> points = new List<Point3D>();
 
                             for (int i = 0; i < coord.Length; i += 2)
                             {
                                 double x = double.Parse(coord[i].Replace('.', ','));
                                 double y = double.Parse(coord[i + 1].Replace('.', ','));
-                                points.Add(new System.Windows.Point(x, -y));
+                                points.Add(new Point3D(x, -y, 0));
                             }
 
-                            geometryGroup.Children.Add(
-                                            Tools.FigureToGeometry(new PathFigure()
-                                            {
-                                                StartPoint = points[0],
-                                                Segments = new PathSegmentCollection()
-                                                {
-                                        new PolyLineSegment(points, true)
-                                                },
-                                                IsClosed = true
-                                            }));
+                            return new GCCollection(){
+                            {
+                                new PointsElement()
+                                {
+                                    Points = points
+                                }
+                            }
+                            };
 
-                            return geometryGroup;
                         }
                         catch
                         {
@@ -65,6 +63,6 @@ namespace ToGeometryConverter.Format
 
             return null;
         }
-         
+
     }
 }

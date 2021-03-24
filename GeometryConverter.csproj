@@ -103,8 +103,14 @@
     <Compile Include="Format\EC.cs" />
     <Compile Include="Format\IFormat.cs" />
     <Compile Include="Format\IGES.cs" />
+    <Compile Include="Object\GCCollection.cs" />
+    <Compile Include="Object\IGCElement.cs" />
+    <Compile Include="Object\IGCObject.cs" />
+    <Compile Include="Object\GeometryElement.cs" />
+    <Compile Include="Object\PointsElement.cs" />
+    <Compile Include="Object\TextElement.cs" />
     <Compile Include="ToGC.cs" />
-    <Compile Include="Format\Tools.cs" />
+    <Compile Include="Format\GCTools.cs" />
     <Compile Include="Object\NurbsShape.cs" />
     <Compile Include="Object\RationalBSplinePoint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,4 +1,4 @@
-﻿using System.Windows.Media;
+﻿using ToGeometryConverter.Object;
 
 namespace ToGeometryConverter.Format
 {
@@ -7,6 +7,6 @@ namespace ToGeometryConverter.Format
         public string Name { get; }
         public string[] ShortName { get; }
 
-        public GeometryGroup Get(string Filename, double RoundStep);
+        public GCCollection Get(string Filename, double RoundStep);
     }
 }

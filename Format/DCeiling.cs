@@ -1,7 +1,10 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Media3D;
+using ToGeometryConverter.Object;
 
 namespace ToGeometryConverter.Format
 {
@@ -10,11 +13,11 @@ namespace ToGeometryConverter.Format
         public string Name { get; } = "DEXCeil";
         public string[] ShortName { get; } = new string[1] { "dc" };
 
-        public GeometryGroup Get(string Filename, double RoundStep)
+        public GCCollection Get(string Filename, double RoundStep)
         {
             if (File.Exists(Filename))
             {
-                GeometryGroup geometryGroup = new GeometryGroup();
+                GCCollection geometryGroup = new GCCollection();
 
                 using (BinaryReader reader = new BinaryReader(File.Open(Filename, FileMode.Open), Encoding.ASCII))
                 {
@@ -41,7 +44,7 @@ namespace ToGeometryConverter.Format
                     int numVertex = reader.ReadInt32();
                     bool isSolid = reader.ReadByte() > 0;
 
-                    PointCollection points = new PointCollection();
+                    List<Point3D> points = new List<Point3D>();
 
                     for (long i = 0; i < numVertex; i++)
                     {
@@ -52,25 +55,18 @@ namespace ToGeometryConverter.Format
 
                         int direct = reader.ReadInt32();
 
-                        points.Add(new System.Windows.Point(x, y));
+                        points.Add(new Point3D(x, y, 0));
                     }
-
-                    Point startPoint = points[0];
                     //points.Remove(points[0]);
 
-                    geometryGroup.Children.Add(
-                                Tools.FigureToGeometry(new PathFigure()
-                                {
-                                    StartPoint = points[0],
-                                    Segments = new PathSegmentCollection()
-                                    {
-                                        new PolyLineSegment(points, true)
-                                    },
-                                    IsClosed = true
-                                }));
-
-                    reader.Close();
-                    return geometryGroup;
+                    
+                    return new GCCollection()
+                    {
+                        new PointsElement(){
+                        Points = points,
+                        IsClosed = true,
+                        }
+                    };
                 }
             }
             return null;

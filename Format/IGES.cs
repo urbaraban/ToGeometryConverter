@@ -1,12 +1,7 @@
 ﻿using IxMilia.Iges;
 using IxMilia.Iges.Entities;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
+using ToGeometryConverter.Object;
 
 namespace ToGeometryConverter.Format
 {
@@ -16,7 +11,7 @@ namespace ToGeometryConverter.Format
         public string[] ShortName { get; } = new string[2] { "igs", "iges" };
 
 
-        public GeometryGroup Get(string filename, double RoundStep)
+        public GCCollection Get(string filename, double RoundStep)
         {
             using (FileStream fs = new FileStream(filename, FileMode.Open))
             {

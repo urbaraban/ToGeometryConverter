@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using ToGeometryConverter.Format;
+using ToGeometryConverter.Object;
 
 namespace ToGeometryConverter
 {
@@ -17,7 +18,7 @@ namespace ToGeometryConverter
             new DCeiling()
         };
 
-        public static GeometryGroup? Get(string Filename, double RoundStep)
+        public static GCCollection Get(string Filename, double RoundStep)
         {
             string InFileFormat = Filename.Split('.').Last();
 
