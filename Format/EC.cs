@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Media.Media3D;
 using ToGeometryConverter.Object;
+using ToGeometryConverter.Object.Elements;
 
 namespace ToGeometryConverter.Format
 {
@@ -10,6 +12,8 @@ namespace ToGeometryConverter.Format
     {
         public string Name { get; } = "EasyCeiling";
         public string[] ShortName { get; } = new string[1] { "ec" };
+
+        public event EventHandler<Tuple<int, int>> Progressed;
 
         public GCCollection Get(string filename, double RoundStep)
         {
@@ -34,13 +38,13 @@ namespace ToGeometryConverter.Format
 
                             string[] coord = XYFind.Substring(start, end - start - 1).Split('\n');
 
-                            List<Point3D> points = new List<Point3D>();
+                            List<GCPoint3D> points = new List<GCPoint3D>();
 
                             for (int i = 0; i < coord.Length; i += 2)
                             {
                                 double x = double.Parse(coord[i].Replace('.', ','));
                                 double y = double.Parse(coord[i + 1].Replace('.', ','));
-                                points.Add(new Point3D(x, -y, 0));
+                                points.Add(new GCPoint3D(x, -y, 0));
                             }
 
                             return new GCCollection(){

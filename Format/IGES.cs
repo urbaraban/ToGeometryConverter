@@ -1,5 +1,6 @@
 ﻿using IxMilia.Iges;
 using IxMilia.Iges.Entities;
+using System;
 using System.IO;
 using ToGeometryConverter.Object;
 
@@ -10,6 +11,7 @@ namespace ToGeometryConverter.Format
         public string Name { get; } = "IGES";
         public string[] ShortName { get; } = new string[2] { "igs", "iges" };
 
+        public event EventHandler<Tuple<int, int>> Progressed;
 
         public GCCollection Get(string filename, double RoundStep)
         {

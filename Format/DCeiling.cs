@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using ToGeometryConverter.Object;
+using ToGeometryConverter.Object.Elements;
 
 namespace ToGeometryConverter.Format
 {
@@ -12,6 +14,8 @@ namespace ToGeometryConverter.Format
     {
         public string Name { get; } = "DEXCeil";
         public string[] ShortName { get; } = new string[1] { "dc" };
+
+        public event EventHandler<Tuple<int, int>> Progressed;
 
         public GCCollection Get(string Filename, double RoundStep)
         {
@@ -44,7 +48,7 @@ namespace ToGeometryConverter.Format
                     int numVertex = reader.ReadInt32();
                     bool isSolid = reader.ReadByte() > 0;
 
-                    List<Point3D> points = new List<Point3D>();
+                    List<GCPoint3D> points = new List<GCPoint3D>();
 
                     for (long i = 0; i < numVertex; i++)
                     {
@@ -55,7 +59,7 @@ namespace ToGeometryConverter.Format
 
                         int direct = reader.ReadInt32();
 
-                        points.Add(new Point3D(x, y, 0));
+                        points.Add(new GCPoint3D(x, y, 0));
                     }
                     //points.Remove(points[0]);
 

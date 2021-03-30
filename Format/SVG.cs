@@ -1,9 +1,11 @@
 ﻿using Svg;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
 using ToGeometryConverter.Object;
+using ToGeometryConverter.Object.Elements;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
 
@@ -13,6 +15,8 @@ namespace ToGeometryConverter.Format
     {
         public string Name { get; } = "Vector";
         public string[] ShortName { get; } = new string[1] { "svg" };
+
+        public event EventHandler<Tuple<int, int>> Progressed;
 
         public GCCollection Get(string filepath, double RoundStep)
         {           

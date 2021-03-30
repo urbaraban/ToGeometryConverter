@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows.Media;
 using ToGeometryConverter.Object;
 using System.Windows.Media.Media3D;
+using ToGeometryConverter.Object.Elements;
 
 namespace ToGeometryConverter
 {
@@ -64,7 +65,7 @@ namespace ToGeometryConverter
             return Math.Sqrt(Math.Pow(point2.X - point1.X, 2) + Math.Pow(point2.Y - point1.Y, 2));
         }
 
-        public static double Lenth3D(Point3D point1, Point3D point2)
+        public static double Lenth3D(GCPoint3D point1, GCPoint3D point2)
         {
             return Math.Sqrt(Math.Pow(point2.X - point1.X, 2) + Math.Pow(point2.Y - point1.Y, 2) + Math.Pow(point2.Z - point1.Z, 2));
         }
@@ -136,7 +137,7 @@ namespace ToGeometryConverter
 
                 for (double t = 0; t <= 2 * Math.PI; t += step)
                 {
-                    ellipseObj.Add(new Point3D()
+                    ellipseObj.Add(new GCPoint3D()
                     {
                         X = C_x + (w / 2) * Math.Cos(t),
                         Y = C_y + (h / 2) * Math.Sin(t)
@@ -148,10 +149,10 @@ namespace ToGeometryConverter
             {
                 pointsObjects.Add(new PointsElement()
                 {
-                    Points = new List<Point3D>()
+                    Points = new List<GCPoint3D>()
                             {
-                                new Point3D(lineGeometry.StartPoint.X, lineGeometry.StartPoint.Y, 0),
-                                new Point3D(lineGeometry.EndPoint.X, lineGeometry.EndPoint.Y, 0)
+                                new GCPoint3D(lineGeometry.StartPoint.X, lineGeometry.StartPoint.Y, 0),
+                                new GCPoint3D(lineGeometry.EndPoint.X, lineGeometry.EndPoint.Y, 0)
                             }
                 });
             }
@@ -164,7 +165,7 @@ namespace ToGeometryConverter
                 {
                     PointsElement lObject = new PointsElement();
                     lObject.IsClosed = figure.IsClosed;
-                    lObject.Add(new Point3D(figure.StartPoint.X, figure.StartPoint.Y, 0));
+                    lObject.Add(new GCPoint3D(figure.StartPoint.X, figure.StartPoint.Y, 0));
 
                     Point LastPoint = figure.StartPoint;
 
@@ -192,14 +193,14 @@ namespace ToGeometryConverter
                                     break;
 
                                 case LineSegment lineSegment:
-                                    lObject.Add(new Point3D(lineSegment.Point.X, lineSegment.Point.Y, 0));
+                                    lObject.Add(new GCPoint3D(lineSegment.Point.X, lineSegment.Point.Y, 0));
                                     LastPoint = lineSegment.Point;
                                     break;
 
                                 case PolyLineSegment polyLineSegment:
                                     for (int i = 0; i < polyLineSegment.Points.Count; i++)
                                     {
-                                        lObject.Add(new Point3D(polyLineSegment.Points[i].X, polyLineSegment.Points[i].Y, 0));
+                                        lObject.Add(new GCPoint3D(polyLineSegment.Points[i].X, polyLineSegment.Points[i].Y, 0));
                                         LastPoint = polyLineSegment.Points.Last();
                                     }
                                     break;
@@ -228,7 +229,7 @@ namespace ToGeometryConverter
                                             LastPoint, arcSegment.Point, arcSegment.Size.Width,
                                             RadiusEdge, sweepDirection, RoundStep, arcSegment.RotationAngle))
                                     {
-                                        lObject.Add(new Point3D(lPoint3D.X, lPoint3D.Y, 0));
+                                        lObject.Add(new GCPoint3D(lPoint3D.X, lPoint3D.Y, 0));
                                     }
                                     LastPoint = arcSegment.Point;
                                     break;
@@ -253,11 +254,11 @@ namespace ToGeometryConverter
         /// </summary>
         public static PointsElement QBezierByStep(Point StartPoint, Point ControlPoint, Point EndPoint, double CRS)
         {
-            Point3D LastPoint = new Point3D(StartPoint.X, StartPoint.Y, 0);
+            GCPoint3D LastPoint = new GCPoint3D(StartPoint.X, StartPoint.Y, 0);
             double Lenth = 0;
             for (int t = 1; t < 100; t++)
             {
-                Point3D tempPoint = GetPoint((double)t / 99);
+                GCPoint3D tempPoint = GetPoint((double)t / 99);
                 Lenth += GCTools.Lenth3D(LastPoint, tempPoint);
                 LastPoint = tempPoint;
             }
@@ -273,9 +274,9 @@ namespace ToGeometryConverter
 
             return tempObj;
 
-            Point3D GetPoint(double t)
+            GCPoint3D GetPoint(double t)
             {
-                return new Point3D(
+                return new GCPoint3D(
                     (1 - t) * (1 - t) * StartPoint.X + 2 * (1 - t) * t * ControlPoint.X + t * t * EndPoint.X,
                    (1 - t) * (1 - t) * StartPoint.Y + 2 * (1 - t) * t * ControlPoint.Y + t * t * EndPoint.Y, 
                    0);
@@ -288,11 +289,11 @@ namespace ToGeometryConverter
         public static PointsElement BezieByStep(Point point0, Point point1, Point point2, Point point3, double CRS)
         {
             double Lenth = 0;
-            Point3D LastPoint = new Point3D(point1.X, point1.Y, 0);
+            GCPoint3D LastPoint = new GCPoint3D(point1.X, point1.Y, 0);
 
             for (int t = 0; t < 100; t++)
             {
-                Point3D tempPoint = GetPoint((double)t / 99);
+                GCPoint3D tempPoint = GetPoint((double)t / 99);
                 Lenth += GCTools.Lenth3D(LastPoint, tempPoint);
                 LastPoint = tempPoint;
             }
@@ -308,9 +309,9 @@ namespace ToGeometryConverter
 
             return tempObj;
 
-            Point3D GetPoint(double t)
+            GCPoint3D GetPoint(double t)
             {
-                return new Point3D(
+                return new GCPoint3D(
                     ((1 - t) * (1 - t) * (1 - t)) * point0.X
                            + 3 * ((1 - t) * (1 - t)) * t * point1.X
                            + 3 * (1 - t) * (t * t) * point2.X
@@ -398,7 +399,8 @@ namespace ToGeometryConverter
             {
                 PathFigure pathFigure = new PathFigure()
                 {
-                    StartPoint = new Point(obj.Points[0].X, obj.Points[0].Y)
+                    StartPoint = new Point(obj.Points[0].X, obj.Points[0].Y),
+                    IsClosed = obj.IsClosed
                 };
                 for (int i = 1; i < obj.Points.Count; i += 1)
                 {
@@ -409,6 +411,25 @@ namespace ToGeometryConverter
             }
 
             return geometries;
+        }
+
+        public static List<PointsElement> TransformPoint(Transform3D Transform, List<PointsElement> InnerList)
+        {
+            List<PointsElement> OutList = new List<PointsElement>();
+            foreach (PointsElement ListPoints in InnerList)
+            {
+                PointsElement OutPoints = new PointsElement()
+                {
+                    IsClosed = ListPoints.IsClosed
+                };
+                foreach (GCPoint3D point in ListPoints)
+                {
+                    Transform.TryTransform(point.GetPoint3D, out Point3D result);
+                    OutPoints.Add(result);
+                }
+                OutList.Add(OutPoints);
+            }
+            return OutList;
         }
 
     }

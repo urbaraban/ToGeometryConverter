@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
-namespace ToGeometryConverter.Object
+namespace ToGeometryConverter.Object.Elements
 {
     public class TextElement : IGCElement
     {
@@ -24,21 +24,32 @@ namespace ToGeometryConverter.Object
 
         public Point3D Point { get; set; }
 
-        public Geometry GetGeometry { get; private set; }
+        public double Size { get; set; }
 
-        public Rect Bounds => GetGeometry.Bounds;
+        public Geometry MyGeometry { get; private set; }
+
+        public Rect Bounds => MyGeometry.Bounds;
+
+        private FormattedText formattedText;
 
         public TextElement(string Text, double Size, Point3D Point)
         {
             this.Text = Text;
             this.Point = Point;
-
-            FormattedText formatted = new FormattedText(Text,
+            this.Size = Size;
+            this.formattedText = new FormattedText(Text,
                                 CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
                                 new Typeface("Tahoma"), Size * 5, Brushes.Black);
-            GetGeometry = formatted.BuildGeometry(new Point(this.Point.X, this.Point.Y));
+
+            MyGeometry = this.formattedText.BuildGeometry(new Point(this.Point.X, this.Point.Y));
         }
 
-        public List<PointsElement> GetPointCollection(bool GetChar, double RoundStep, double RoundEdge) => new List<PointsElement>();
+        public List<PointsElement> GetPointCollection(Transform3D Transform, double RoundStep, double RoundEdge) => new List<PointsElement>();
+
+        public Geometry GetGeometry(Transform3D Transform, double RoundStep, double RoundEdge)
+        {
+            Transform.TryTransform(this.Point, out Point3D point);
+            return this.formattedText.BuildGeometry(new Point(point.X, point.Y));
+        }
     }
 }

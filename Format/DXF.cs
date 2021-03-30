@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Media;
 using ToGeometryConverter.Object;
+using ToGeometryConverter.Object.Elements;
 using Size = System.Windows.Size;
 
 namespace ToGeometryConverter.Format
@@ -15,6 +16,8 @@ namespace ToGeometryConverter.Format
     {
         string IFormat.Name => "DXF";
         string[] IFormat.ShortName => new string[1] { "dxf" };
+
+        public event EventHandler<Tuple<int, int>> Progressed;
 
         public GCCollection Get(string filename, double CRS)
         {

@@ -2,6 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
+using ToGeometryConverter.Object.Elements;
 
 namespace ToGeometryConverter.Object
 {
@@ -11,39 +14,59 @@ namespace ToGeometryConverter.Object
 
         public string Name = string.Empty;
 
+        public int IndexSelectElement = -1;
+
         public Rect Bounds
         {
             get
             {
-                Rect first = Elements[0].Bounds;
-                double minX = first.X, minY = first.Y, /*minZ = first.Z,*/ maxX = first.X, maxY = first.Y; /*maxZ = first.Z*/
-
-                foreach (IGCElement gCObject in Elements)
+                if (Elements.Count > 0)
                 {
-                    if ((gCObject is TextElement) == false)
+                    Rect first = Elements[0].Bounds;
+                    double minX = first.X, minY = first.Y, /*minZ = first.Z,*/ maxX = first.X, maxY = first.Y; /*maxZ = first.Z*/
+
+                    foreach (IGCElement gCObject in Elements)
                     {
-                        minX = Math.Min(minX, gCObject.Bounds.TopLeft.X);
-                        maxX = Math.Max(maxX, gCObject.Bounds.BottomRight.X);
-                        minY = Math.Min(minY, gCObject.Bounds.TopLeft.Y);
-                        maxY = Math.Max(maxY, gCObject.Bounds.BottomRight.Y);
-                        //minZ = Math.Min(minZ, point3D.Z);
-                        //maxZ = Math.Max(maxZ, point3D.Z);
+                        if ((gCObject is TextElement) == false)
+                        {
+                            minX = Math.Min(minX, gCObject.Bounds.TopLeft.X);
+                            maxX = Math.Max(maxX, gCObject.Bounds.BottomRight.X);
+                            minY = Math.Min(minY, gCObject.Bounds.TopLeft.Y);
+                            maxY = Math.Max(maxY, gCObject.Bounds.BottomRight.Y);
+                            //minZ = Math.Min(minZ, point3D.Z);
+                            //maxZ = Math.Max(maxZ, point3D.Z);
+                        }
                     }
+                    return new Rect(new Point(minX, minY), new Point(maxX, maxY));
                 }
-                return new Rect(new Point(minX,minY), new Point(maxX, maxY));
+                return new Rect();
             }
         }
 
-        public List<PointsElement> GetPointCollection(bool GetChar, double RoundStep, double RoundEdge)
+        public List<PointsElement> GetPointCollection(Transform3D Transform, double RoundStep, double RoundEdge)
         {
             List<PointsElement> points = new List<PointsElement>();
             foreach(IGCElement element in this.Elements)
             {
-                if ((element is TextElement) == false || GetChar == true){
-                    points.AddRange(element.GetPointCollection(GetChar, RoundStep, RoundEdge));
+                if ((element is TextElement) == false)
+                {
+                    points.AddRange(element.GetPointCollection(Transform, RoundStep, RoundEdge));
                 }
             }
             return points;
+        }
+
+        internal void AddRange(List<PointsElement> pointsElements) => Elements.AddRange(pointsElements);
+
+        public Geometry GetGeometry(Transform3D Transform, double RoundStep, double RoundEdge)
+        {
+            GeometryGroup geometryGroup = new GeometryGroup();
+            foreach (IGCElement element in this.Elements)
+            {
+                geometryGroup.Children.Add(element.GetGeometry(Transform, RoundStep, RoundEdge));
+            }
+
+            return geometryGroup;
         }
 
         #region IList<IGCElement>

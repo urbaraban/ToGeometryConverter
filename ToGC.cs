@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Media;
 using ToGeometryConverter.Format;
 using ToGeometryConverter.Object;
 
@@ -11,14 +9,20 @@ namespace ToGeometryConverter
 {
     public static class ToGC
     {
+        public static event EventHandler<Tuple<int, int>> Progressed;
+
         private static List<IFormat> Formats = new List<IFormat>()
         {
             new SVG(),
             new DXF(),
-            new DCeiling()
+            new DCeiling(),
+            new STL(),
+            new ILD(),
+            //new IGES(),
+            //new PDF()
         };
 
-        public static GCCollection Get(string Filename, double RoundStep)
+        public async static Task<GCCollection> AsyncGet(string Filename, double RoundStep)
         {
             string InFileFormat = Filename.Split('.').Last();
 
@@ -26,13 +30,14 @@ namespace ToGeometryConverter
             {
                 foreach (string frm in format.ShortName)
                 {
-                    if (frm == InFileFormat) return format.Get(Filename, RoundStep);
+                    if (frm.ToLower() == InFileFormat.ToLower())
+                    {
+                        return format.Get(Filename, RoundStep);
+                    }
                 }
             }
             return null;
         }
-
-        //"(.frw; .cdw; .svg; .dxf; .stp; .ild; .ec)|*.frw; *.cdw; *.svg; *.dxf, *.stp, *.ild, *.ec| All Files (*.*)|*.*";
 
         public static string Filter
         {
