@@ -1,4 +1,6 @@
-﻿using System.Windows.Media.Media3D;
+﻿using System;
+using System.Windows.Media.Media3D;
+using ToGeometryConverter.Format;
 
 namespace ToGeometryConverter.Object.Elements
 {
@@ -24,6 +26,11 @@ namespace ToGeometryConverter.Object.Elements
             this.Y = Y;
             this.Z = Z;
             this.Multiplier = 0;
+        }
+
+        internal static GCPoint3D Parse(Edge edge)
+        {
+            return new GCPoint3D(edge.v1.X, edge.v1.Y, edge.v1.Z);
         }
     }
 }

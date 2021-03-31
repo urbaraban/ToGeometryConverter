@@ -9,8 +9,6 @@ namespace ToGeometryConverter
 {
     public static class ToGC
     {
-        public static event EventHandler<Tuple<int, int>> Progressed;
-
         private static List<IFormat> Formats = new List<IFormat>()
         {
             new SVG(),
@@ -22,7 +20,7 @@ namespace ToGeometryConverter
             //new PDF()
         };
 
-        public async static Task<GCCollection> AsyncGet(string Filename, double RoundStep)
+        public static GCCollection Get(string Filename, double RoundStep)
         {
             string InFileFormat = Filename.Split('.').Last();
 
@@ -37,6 +35,11 @@ namespace ToGeometryConverter
                 }
             }
             return null;
+        }
+
+        private static void Format_Progressed(object sender, Tuple<int, int> e)
+        {
+            throw new NotImplementedException();
         }
 
         public static string Filter
@@ -69,6 +72,35 @@ namespace ToGeometryConverter
 
                 return _filter;
             }
+        }
+    }
+
+    public static class ToGCLogger
+    {
+        public static event EventHandler<ProgBarMessage> Progressed;
+
+        public static void Set(int Value, int MaxValue, string Message)
+        {
+            Progressed?.Invoke(null, new ProgBarMessage(Value, MaxValue, Message));
+        }
+        
+        public static void End()
+        {
+            Progressed?.Invoke(null, new ProgBarMessage(0, 1, string.Empty));
+        }
+    }
+
+    public struct ProgBarMessage
+    {
+        public int v;
+        public int m;
+        public string t;
+        
+        public ProgBarMessage(int Value, int MaxValue, string Text)
+        {
+            this.v = Value;
+            this.m = MaxValue;
+            this.t = Text;
         }
     }
 }
