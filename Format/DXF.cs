@@ -49,15 +49,9 @@ namespace ToGeometryConverter.Format
 
                 foreach (DxfEntity entity in entitys)
                 {
-                    switch (entity.EntityType)
+                    switch (entity)
                     {
-                        case DxfEntityType.Point:
-                            /* DxfPoint dxfPoint = (DxfPoint)entity;
-                             geometry.AddGeometry(new LineGeometry(new Point(dxfPoint.X, dxfPoint.Y), new Point(dxfPoint.X, dxfPoint.Y)));*/
-                            break;
-
-                        case DxfEntityType.Insert:
-                            DxfInsert dxfInsert = (DxfInsert)entity;
+                        case DxfInsert dxfInsert:
                             foreach (DxfBlock dxfBlock in dxfFile.Blocks)
                             {
                                 if (dxfInsert.Name == dxfBlock.Name)
@@ -82,14 +76,11 @@ namespace ToGeometryConverter.Format
                             geometryGroup.Children.Add(Mformatted.BuildGeometry(new Point(dxfMText.InsertionPoint.X, dxfMText.InsertionPoint.Y)));
                             break;*/
 
-                        case DxfEntityType.Line:
-                            DxfLine line = (DxfLine)entity;
+                        case DxfLine line:
                             gccollection.Add(new GeometryElement(new LineGeometry(GCTools.Dxftp(line.P1), GCTools.Dxftp(line.P2))));
                             break;
 
-                        case DxfEntityType.Helix:
-                            DxfHelix dxfHelix = (DxfHelix)entity;
-
+                        case DxfHelix dxfHelix:
                             PointCollection points = new PointCollection(GetSpiralPoints(dxfHelix, CRS));
 
                             gccollection.Add(
@@ -104,8 +95,7 @@ namespace ToGeometryConverter.Format
                                 })));
                             break;
 
-                        case DxfEntityType.MLine:
-                            DxfMLine dxfMLine = (DxfMLine)entity;
+                        case DxfMLine dxfMLine:
                             PathFigure MLineFigure = new PathFigure();
                             MLineFigure.StartPoint = GCTools.Dxftp(dxfMLine.Vertices[0]);
 
@@ -121,9 +111,7 @@ namespace ToGeometryConverter.Format
 
                             break;
 
-                        case DxfEntityType.Arc:
-                            DxfArc dxfArc = (DxfArc)entity;
-
+                        case DxfArc dxfArc:
                             PathFigure ArcContour = new PathFigure();
                             ArcContour.StartPoint = GCTools.Dxftp(dxfArc.GetPointFromAngle(dxfArc.StartAngle));
 
@@ -142,14 +130,12 @@ namespace ToGeometryConverter.Format
                                 GCTools.FigureToGeometry(ArcContour)));
                             break;
 
-                        case DxfEntityType.Circle:
-                            DxfCircle dxfCircle = (DxfCircle)entity;
+                        case DxfCircle dxfCircle:
                             gccollection.Add(new GeometryElement(
                                 new EllipseGeometry(GCTools.Dxftp(dxfCircle.Center), dxfCircle.Radius, dxfCircle.Radius)));
                             break;
 
-                        case DxfEntityType.Ellipse:
-                            DxfEllipse dxfEllipse = (DxfEllipse)entity;
+                        case DxfEllipse dxfEllipse:
                             double MajorAngle = (Math.PI * 2 - Math.Atan((dxfEllipse.MajorAxis.Y) / (dxfEllipse.MajorAxis.X))) % (2 * Math.PI);
                             gccollection.Add(
                                 new GeometryElement(
@@ -159,8 +145,7 @@ namespace ToGeometryConverter.Format
                                 new RotateTransform(MajorAngle * 180 / Math.PI)))); 
                             break;
 
-                        case DxfEntityType.LwPolyline:
-                            DxfLwPolyline dxfLwPolyline = (DxfLwPolyline)entity;
+                        case DxfLwPolyline dxfLwPolyline:
                             PathFigure lwPolyLineFigure = new PathFigure();
 
                             lwPolyLineFigure.StartPoint = GCTools.DxfLwVtp(dxfLwPolyline.Vertices[0]);
@@ -189,9 +174,7 @@ namespace ToGeometryConverter.Format
 
                             break;
 
-                        case DxfEntityType.Polyline:
-                            DxfPolyline dxfPolyline = (DxfPolyline)entity;
-
+                        case DxfPolyline dxfPolyline:
                             PathFigure polyLineFigure = new PathFigure();
                             polyLineFigure.StartPoint = GCTools.Dxftp(dxfPolyline.Vertices[0].Location);
 
@@ -205,9 +188,7 @@ namespace ToGeometryConverter.Format
                             gccollection.Add(new GeometryElement(GCTools.FigureToGeometry(polyLineFigure)));
                             break;
 
-                        case DxfEntityType.Spline:
-                            DxfSpline dxfSpline = (DxfSpline)entity;
-
+                        case DxfSpline dxfSpline:
                             ObservableCollection<RationalBSplinePoint> rationalBSplinePoints = new ObservableCollection<RationalBSplinePoint>();
 
                             foreach (DxfControlPoint controlPoint in dxfSpline.ControlPoints)
@@ -215,6 +196,9 @@ namespace ToGeometryConverter.Format
                                 rationalBSplinePoints.Add(new RationalBSplinePoint(GCTools.Dxftp(controlPoint.Point), controlPoint.Weight));
                             }
                             gccollection.Add(new GeometryElement(new NurbsShape(rationalBSplinePoints, dxfSpline.DegreeOfCurve, dxfSpline.KnotValues, CRS, dxfSpline.IsRational == true)));
+
+                            break;
+                        case Dxf3DSolid dxf3DSolid:
 
                             break;
                     }

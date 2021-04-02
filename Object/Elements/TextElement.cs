@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -26,9 +27,10 @@ namespace ToGeometryConverter.Object.Elements
 
         public double Size { get; set; }
 
-        public Geometry MyGeometry { get; private set; }
+        public Task<Geometry> MyGeometry { get; private set; }
 
-        public Rect Bounds => MyGeometry.Bounds;
+        public Rect Bounds => this.bounds;
+        private Rect bounds;
 
         private FormattedText formattedText;
 
@@ -41,7 +43,8 @@ namespace ToGeometryConverter.Object.Elements
                                 CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
                                 new Typeface("Tahoma"), Size * 5, Brushes.Black);
 
-            MyGeometry = this.formattedText.BuildGeometry(new Point(this.Point.X, this.Point.Y));
+            MyGeometry = new Task<Geometry>(() => { return formattedText.BuildGeometry(new Point(this.Point.X, this.Point.Y)); });
+            this.bounds = Bounds;
         }
 
         public List<PointsElement> GetPointCollection(Transform3D Transform, double RoundStep, double RoundEdge) => new List<PointsElement>();

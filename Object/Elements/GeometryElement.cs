@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using System.Windows.Threading;
 
 namespace ToGeometryConverter.Object.Elements
 {
@@ -14,11 +17,12 @@ namespace ToGeometryConverter.Object.Elements
         public GeometryElement(Geometry geometry)
         {
             MyGeometry = geometry;
+            bounds = geometry.Bounds;
         }
 
         public List<PointsElement> GetPointCollection(Transform3D Transform, double RoundStep, double RoundEdge)
         {
-            return GCTools.TransformPoint(Transform, GCTools.GetGeometryPoints(MyGeometry, RoundStep, RoundEdge));
+            return GCTools.TransformPoint(Transform, GCTools.GetGeometryPoints(MyGeometry, RoundStep, RoundEdge)); 
         }
 
         public Geometry GetGeometry(Transform3D Transform, double RoundStep, double RoundEdge)
@@ -26,6 +30,7 @@ namespace ToGeometryConverter.Object.Elements
            return GCTools.GetPointsGeometries(this.GetPointCollection(Transform, RoundStep, RoundEdge));
         }
 
-        public Rect Bounds => MyGeometry.Bounds;
+        public Rect Bounds => this.bounds;
+        private Rect bounds;
     }
 }

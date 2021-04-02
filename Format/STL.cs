@@ -44,11 +44,9 @@ namespace ToGeometryConverter.Format
 
                 foreach (List<Edge> place in edges)
                 {
-                    if (place.Count > stlFile.Triangles.Count / 20)
-                    {
+                    if (place.Count > stlFile.Triangles.Count * 0.01)
                         gCElements.AddRange(GetContourPlaces(place));
-                        //gCElements.Add(GetContour(STL.SortEdges(place)));
-                    }
+                    //gCElements.Add(GetContour(STL.SortEdges(place)));
                 }
 
                 fs.Close();
@@ -79,77 +77,80 @@ namespace ToGeometryConverter.Format
 
         private static List<List<Edge>> GetPlaces(List<Polygon> Polygons)
         {
-            ToGCLogger.Set(0, Polygons.Count, "Выделяем поверхности");
-            //Remove edge in polygons with angle beetwin < 10 grad
-            for (int first = 0; first < Polygons.Count - 1; first += 1)
+            List<List<Edge>> EdgePlace = new List<List<Edge>>();
+
+            if (Polygons.Count > 0)
             {
-                ToGCLogger.Set(first, Polygons.Count, $"{first}/{Polygons.Count}");
-                for (int second = first + 1; second < Polygons.Count; second += 1)
+                ToGCLogger.Set(0, Polygons.Count, "Выделяем поверхности");
+                //Remove edge in polygons with angle beetwin < 10 grad
+                for (int first = 0; first < Polygons.Count - 1; first += 1)
                 {
-                    if (Vector3D.AngleBetween(Polygons[first].normal, Polygons[second].normal) < 20)
+                    ToGCLogger.Set(first, Polygons.Count, $"{first}/{Polygons.Count}");
+                    for (int second = first + 1; second < Polygons.Count; second += 1)
                     {
-                        for (int h = 0; h < Polygons[first].edges.Count; h += 1)
+                        if (Vector3D.AngleBetween(Polygons[first].normal, Polygons[second].normal) < 20)
                         {
-                            for (int z = 0; z < Polygons[second].edges.Count; z += 1)
+                            for (int h = 0; h < Polygons[first].edges.Count; h += 1)
                             {
-                                if (Polygons[first].edges[h] != null && Polygons[second].edges[z] != null)
+                                for (int z = 0; z < Polygons[second].edges.Count; z += 1)
                                 {
-                                    if (EqalseEdge(Polygons[first].edges[h], Polygons[second].edges[z]) == true)
+                                    if (Polygons[first].edges[h] != null && Polygons[second].edges[z] != null)
                                     {
-                                        Polygons[first].edges[h] = null;
-                                        Polygons[second].edges[z] = null;
+                                        if (EqalseEdge(Polygons[first].edges[h], Polygons[second].edges[z]) == true)
+                                        {
+                                            Polygons[first].edges[h] = null;
+                                            Polygons[second].edges[z] = null;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                if (Polygons[first].edges[0] == null && Polygons[first].edges[1] == null && Polygons[first].edges[2] == null)
-                {
-                    Polygons.RemoveAt(first);
-                    first -= 1;
-                }
-            }
-
-            //sort polygon by places with similar normal
-            List<List<Polygon>> PlacesPolygons = new List<List<Polygon>> { new List<Polygon> { Polygons[0] } };
-            for (int first = 1; first < Polygons.Count; first += 1)
-            {
-                Polygon polygon = Polygons[first];
-                foreach (List<Polygon> place in PlacesPolygons)
-                {
-                    if (Vector3D.AngleBetween(place[0].normal, polygon.normal) <= 1)
+                    if (Polygons[first].edges[0] == null && Polygons[first].edges[1] == null && Polygons[first].edges[2] == null)
                     {
-                        place.Add(polygon);
-                        Polygons.Remove(polygon);
+                        Polygons.RemoveAt(first);
                         first -= 1;
-                        break;
                     }
                 }
-                if (Polygons.IndexOf(polygon) > -1)
-                {
-                    PlacesPolygons.Add(new List<Polygon> { Polygons[first] });
-                    Polygons.Remove(polygon);
-                    first -= 1;
-                }
-            }
 
-            List<List<Edge>> EdgePlace = new List<List<Edge>>();
-
-            foreach (List<Polygon> polygons in PlacesPolygons)
-            {
-                List<Edge> edges = new List<Edge>();
-                foreach (Polygon polygon in polygons)
+                //sort polygon by places with similar normal
+                List<List<Polygon>> PlacesPolygons = new List<List<Polygon>> { new List<Polygon> { Polygons[0] } };
+                for (int first = 1; first < Polygons.Count; first += 1)
                 {
-                    foreach (Edge edge in polygon.edges)
+                    Polygon polygon = Polygons[first];
+                    foreach (List<Polygon> place in PlacesPolygons)
                     {
-                        if (edge != null)
+                        if (Vector3D.AngleBetween(place[0].normal, polygon.normal) <= 1)
                         {
-                            edges.Add(edge);
+                            place.Add(polygon);
+                            Polygons.Remove(polygon);
+                            first -= 1;
+                            break;
                         }
                     }
+                    if (Polygons.IndexOf(polygon) > -1)
+                    {
+                        PlacesPolygons.Add(new List<Polygon> { Polygons[first] });
+                        Polygons.Remove(polygon);
+                        first -= 1;
+                    }
                 }
-                if (edges.Count > 2) EdgePlace.Add(edges);
+
+                foreach (List<Polygon> polygons in PlacesPolygons)
+                {
+                    List<Edge> edges = new List<Edge>();
+                    foreach (Polygon polygon in polygons)
+                    {
+                        foreach (Edge edge in polygon.edges)
+                        {
+                            if (edge != null)
+                            {
+                                edges.Add(edge);
+                            }
+                        }
+                    }
+                    if (edges.Count > 2) EdgePlace.Add(edges);
+                }
             }
 
             ToGCLogger.End();
@@ -158,7 +159,6 @@ namespace ToGeometryConverter.Format
 
         private static List<Edge> SortEdges(List<Edge> aEdges)
         {
-            Console.WriteLine($"Sort {aEdges.Count} edges");
             List<Edge> result = new List<Edge>(aEdges);
             for (int i = 0; i < result.Count - 1; i++)
             {
@@ -188,11 +188,11 @@ namespace ToGeometryConverter.Format
 
             for (int i = 1; i < SortEdges.Count - 1; i += 1)
             {
-                if (EqalseVertex(SortEdges[i].v1, SortEdges[i - 1].v2, true) == false)
+                if (EqalseVertex(SortEdges[i].v1, SortEdges[i - 1].v2) == false)
                 {
                     if (i > 2)
                     {
-                        points.Add(GetContour(SortEdges.GetRange(0, i)));
+                        points.Add(GetPointsElement(SortEdges.GetRange(0, i)));
                     }
                     SortEdges.RemoveRange(0, i);
                     i = 1;
@@ -200,30 +200,34 @@ namespace ToGeometryConverter.Format
             }
             if (SortEdges.Count > 2)
             {
-                points.Add(GetContour(SortEdges));
+                points.Add(GetPointsElement(SortEdges));
             }
 
             return points;
         }
 
-        public static PointsElement GetContour(List<Edge> edges)
+        public static PointsElement GetPointsElement(List<Edge> edges)
         {
             PointsElement points = new PointsElement() { IsClosed = true };
-            foreach(Edge edge in edges)
+            points.Add(GCPoint3D.Parse(edges[0]));
+            for (int i = 1; i < edges.Count; i += 1)
             {
-                points.Add(GCPoint3D.Parse(edge));
+                points.Add(GCPoint3D.Parse(edges[i]));
+                
+                /*if (AngleBetweenEdge(edges[i - 1], edges[i]) > 0.01)
+                {
+                    points.Add(GCPoint3D.Parse(edges[i]));
+                }*/
             }
             return points;
         }
 
-        public static bool EqalseVertex(StlVertex stlVertex1, StlVertex stlVertex2, bool log = false)
+        public static bool EqalseVertex(StlVertex stlVertex1, StlVertex stlVertex2)
         {
             double lenth = Math.Sqrt(
                 Math.Pow(stlVertex2.X - stlVertex1.X, 2) +
                 Math.Pow(stlVertex2.Y - stlVertex1.Y, 2) +
                 Math.Pow(stlVertex2.Z - stlVertex1.Z, 2));
-            if (log == true)
-                Console.WriteLine(lenth.ToString());
             return lenth == 0;
         }
 
@@ -231,7 +235,10 @@ namespace ToGeometryConverter.Format
             ((EqalseVertex(edge1.v1, edge2.v1) && EqalseVertex(edge1.v2, edge2.v2)) ||
             (EqalseVertex(edge1.v2, edge2.v1) && EqalseVertex(edge1.v1, edge2.v2)));
 
-          
+        public static double AngleBetweenEdge(Edge edge1, Edge edge2)
+        {
+            return Vector3D.AngleBetween(edge1.GetVector, edge2.GetVector);
+        }
 
 
     }
@@ -246,6 +253,8 @@ namespace ToGeometryConverter.Format
             this.v1 = v1;
             this.v2 = v2;
         }
+
+        public Vector3D GetVector => new Vector3D(v2.X - v1.X, v2.Y - v1.Y, v2.Z - v1.Z);
 
         public Edge GetInverse => new Edge(this.v2, this.v1 );
 

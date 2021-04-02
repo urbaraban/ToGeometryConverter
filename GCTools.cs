@@ -8,6 +8,7 @@ using System.Windows.Media;
 using ToGeometryConverter.Object;
 using System.Windows.Media.Media3D;
 using ToGeometryConverter.Object.Elements;
+using System.Windows.Threading;
 
 namespace ToGeometryConverter
 {
@@ -156,11 +157,12 @@ namespace ToGeometryConverter
                             }
                 });
             }
+            
+            return pointsObjects;
 
             List<PointsElement> GetPathPoint(PathGeometry pathGeometry)
             {
                 List<PointsElement> PathPointList = new List<PointsElement>();
-
                 foreach (PathFigure figure in pathGeometry.Figures)
                 {
                     PointsElement lObject = new PointsElement();
@@ -242,10 +244,8 @@ namespace ToGeometryConverter
                     if (lObject.Count > 0)
                         PathPointList.Add(lObject);
                 }
-
                 return PathPointList;
             }
-            return pointsObjects;
         }
 
 
