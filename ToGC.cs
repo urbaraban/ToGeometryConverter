@@ -20,7 +20,7 @@ namespace ToGeometryConverter
             //new PDF()
         };
 
-        public static GCCollection Get(string Filename, double RoundStep)
+        public async static Task<GCCollection> Get(string Filename, double RoundStep)
         {
             string InFileFormat = Filename.Split('.').Last();
 

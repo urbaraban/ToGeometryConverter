@@ -27,7 +27,11 @@ namespace ToGeometryConverter.Format.ILDA
                     b = null;
                 }
             }
-     
+        }
+
+        public FileParser(byte[] arr)
+        {
+            this.b = arr;
         }
 
         /*

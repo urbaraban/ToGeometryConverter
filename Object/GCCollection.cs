@@ -57,7 +57,15 @@ namespace ToGeometryConverter.Object
             return points;
         }
 
-        internal void AddRange(List<PointsElement> pointsElements) => Elements.AddRange(pointsElements);
+        public void AddRange(List<IGCElement> pointsElements) => Elements.AddRange(pointsElements);
+
+        public void AddRange(GeometryGroup geometryGroup)
+        {
+            foreach(Geometry geometry in geometryGroup.Children)
+            {
+                Elements.Add(new GeometryElement(geometry));
+            }
+        }
 
         public Geometry GetGeometry(Transform3D Transform, double RoundStep, double RoundEdge)
         {

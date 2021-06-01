@@ -181,10 +181,10 @@ namespace ToGeometryConverter.Format
             return result;
         }
 
-        private static List<PointsElement> GetContourPlaces(List<Edge> Edges)
+        private static List<IGCElement> GetContourPlaces(List<Edge> Edges)
         {
             List<Edge> SortEdges = STL.SortEdges(Edges);
-            List<PointsElement> points = new List<PointsElement>(); 
+            List<IGCElement> points = new List<IGCElement>(); 
 
             for (int i = 1; i < SortEdges.Count - 1; i += 1)
             {
