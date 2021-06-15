@@ -228,9 +228,8 @@
     <Compile Include="Format\DXF.cs" />
     <Compile Include="Format\EC.cs" />
     <Compile Include="Format\IFormat.cs" />
-    <Compile Include="Format\IGES.cs" />
     <Compile Include="Format\ILD.cs" />
-    <Compile Include="Format\ILDA\FileParser.cs" />
+    <Compile Include="Format\FileParser.cs" />
     <Compile Include="Format\ILDA\IldaFrame.cs" />
     <Compile Include="Format\ILDA\IldaPalette.cs" />
     <Compile Include="Format\ILDA\IldaPoint.cs" />
@@ -238,6 +237,9 @@
     <Compile Include="Format\ILDA\IldaReader.cs" />
     <Compile Include="Format\ILDA\IldaWriter.cs" />
     <Compile Include="Format\ILDA\PicReader.cs" />
+    <Compile Include="Object\UDP\GCByteReader.cs" />
+    <Compile Include="Object\UDP\GCByteWriter.cs" />
+    <Compile Include="Object\UDP\UdpLaserListener.cs" />
     <Compile Include="Format\PDF.cs" />
     <Compile Include="Format\STL.cs" />
     <Compile Include="Object\Elements\GCPoint3D.cs" />
@@ -259,12 +261,6 @@
     <None Include="GeometryConverter.pfx" />
     <None Include="packages.config" />
     <None Include="Togeometrykey.pfx" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\iges\src\IxMilia.Iges\IxMilia.Iges.csproj">
-      <Project>{870805de-2edb-493b-b08b-8d17aa573aa0}</Project>
-      <Name>IxMilia.Iges</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />

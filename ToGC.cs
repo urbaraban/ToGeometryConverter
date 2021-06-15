@@ -20,7 +20,7 @@ namespace ToGeometryConverter
             //new PDF()
         };
 
-        public async static Task<GCCollection> Get(string Filename, double RoundStep)
+        public async static Task<GCCollection> GetAsync(string Filename, double RoundStep)
         {
             string InFileFormat = Filename.Split('.').Last();
 
@@ -30,7 +30,7 @@ namespace ToGeometryConverter
                 {
                     if (frm.ToLower() == InFileFormat.ToLower())
                     {
-                        return format.Get(Filename, RoundStep);
+                        return await format.GetAsync(Filename, RoundStep);
                     }
                 }
             }

@@ -17,7 +17,7 @@ namespace ToGeometryConverter.Format
 
         public event EventHandler<Tuple<int, int>> Progressed;
 
-        public GCCollection Get(string Filename, double RoundStep)
+        public async Task<GCCollection> GetAsync(string Filename, double RoundStep)
         {
             GCCollection gCElements = new GCCollection();
 

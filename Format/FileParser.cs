@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace ToGeometryConverter.Format.ILDA
+namespace ToGeometryConverter.Format
 {
     public class FileParser
     {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Media3D;
 using ToGeometryConverter.Object;
@@ -15,7 +16,7 @@ namespace ToGeometryConverter.Format
 
         public event EventHandler<Tuple<int, int>> Progressed;
 
-        public GCCollection Get(string filename, double RoundStep)
+        public async Task<GCCollection> GetAsync(string filename, double RoundStep)
         {
             if (File.Exists(filename))
             {

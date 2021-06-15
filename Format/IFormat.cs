@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using ToGeometryConverter.Object;
 
 namespace ToGeometryConverter.Format
@@ -10,6 +11,6 @@ namespace ToGeometryConverter.Format
         public string Name { get; }
         public string[] ShortName { get; }
 
-        public GCCollection Get(string Filename, double RoundStep);
+        public Task<GCCollection> GetAsync(string Filename, double RoundStep);
     }
 }

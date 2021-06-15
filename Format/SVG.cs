@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using ToGeometryConverter.Object;
@@ -18,7 +19,7 @@ namespace ToGeometryConverter.Format
 
         public event EventHandler<Tuple<int, int>> Progressed;
 
-        public GCCollection Get(string filepath, double RoundStep)
+        public async Task<GCCollection> GetAsync(string filepath, double RoundStep)
         {           
             SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
 

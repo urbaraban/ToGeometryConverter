@@ -4,6 +4,7 @@ using IxMilia.Dxf.Entities;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using ToGeometryConverter.Object;
@@ -19,7 +20,7 @@ namespace ToGeometryConverter.Format
 
         public event EventHandler<Tuple<int, int>> Progressed;
 
-        public GCCollection Get(string filename, double CRS)
+        public async Task<GCCollection> GetAsync(string filename, double CRS)
         {
             DxfFile dxfFile;
             try
