@@ -344,6 +344,8 @@ namespace ToGeometryConverter
 
                 double RadianStep = Delta / (int)((Delta * radius) / CRS);
 
+                if (double.IsInfinity(RadianStep) == true) RadianStep = 1;
+
                 for (double radian = 0; radian <= Delta * 1.005; radian += RadianStep)
                 {
                     double Angle = (StartAngle + (clockwise == SweepDirection.Counterclockwise ? radian : -radian)) % (2 * Math.PI);

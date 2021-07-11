@@ -8,11 +8,8 @@ namespace ToGeometryConverter.Object.UDP
     {
         public async static Task<GCCollection> Read(byte[] b)
         {
-            int position = 0;
-
             if (b != null)
             {
-
                 GCCollection gCElements = new GCCollection();
                 ByteParser fileParser = new ByteParser(b);
 
@@ -24,7 +21,7 @@ namespace ToGeometryConverter.Object.UDP
 
                 gCElements.Name = fileParser.GetString(16);
 
-                int PathCount = fileParser.GetInt();
+                int PathCount = fileParser.GetShort();
 
                 for (int p = 0; p < PathCount; p++)
                 {

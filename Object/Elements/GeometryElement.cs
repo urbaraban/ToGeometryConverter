@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-using System.Windows.Threading;
 
 namespace ToGeometryConverter.Object.Elements
 {
@@ -16,7 +13,7 @@ namespace ToGeometryConverter.Object.Elements
 
         public GeometryElement(Geometry geometry)
         {
-            MyGeometry = geometry;
+            MyGeometry = geometry.Clone();
             bounds = geometry.Bounds;
         }
 
