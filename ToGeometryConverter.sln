@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeometryConverter", "Geomet
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IxMilia.Iges", "..\iges\src\IxMilia.Iges\IxMilia.Iges.csproj", "{870805DE-2EDB-493B-B08B-8D17AA573AA0}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IxMilia.Step", "..\step\src\IxMilia.Step\IxMilia.Step.csproj", "{C10C1393-FE0F-4022-820F-972532C38C1D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,14 @@ Global
 		{870805DE-2EDB-493B-B08B-8D17AA573AA0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{870805DE-2EDB-493B-B08B-8D17AA573AA0}.Release|x86.ActiveCfg = Release|Any CPU
 		{870805DE-2EDB-493B-B08B-8D17AA573AA0}.Release|x86.Build.0 = Release|Any CPU
+		{C10C1393-FE0F-4022-820F-972532C38C1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C10C1393-FE0F-4022-820F-972532C38C1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C10C1393-FE0F-4022-820F-972532C38C1D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C10C1393-FE0F-4022-820F-972532C38C1D}.Debug|x86.Build.0 = Debug|Any CPU
+		{C10C1393-FE0F-4022-820F-972532C38C1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C10C1393-FE0F-4022-820F-972532C38C1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C10C1393-FE0F-4022-820F-972532C38C1D}.Release|x86.ActiveCfg = Release|Any CPU
+		{C10C1393-FE0F-4022-820F-972532C38C1D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

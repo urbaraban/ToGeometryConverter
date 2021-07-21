@@ -13,9 +13,12 @@ namespace ToGeometryConverter
         {
             new SVG(),
             new DXF(),
-            new DCeiling(),
+            new DEXCeil(),
             new STL(),
             new ILD(),
+            new MetaFile(),
+            new JSON(),
+            //new STP()
             //new IGES(),
             //new PDF()
         };

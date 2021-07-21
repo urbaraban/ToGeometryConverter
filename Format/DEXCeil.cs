@@ -8,7 +8,7 @@ using ToGeometryConverter.Object.Elements;
 
 namespace ToGeometryConverter.Format
 {
-    public class DCeiling : IFormat
+    public class DEXCeil : IFormat
     {
         public string Name { get; } = "DEXCeil";
         public string[] ShortName { get; } = new string[1] { "dc" };
