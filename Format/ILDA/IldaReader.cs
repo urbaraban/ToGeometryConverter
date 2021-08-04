@@ -14,7 +14,7 @@ namespace ToGeometryConverter.Format.ILDA
         public IldaPalette palette;
 
 
-        public IldaReader(String location) : base(location)
+        public IldaReader(string location) : base(location)
         {
 
             if (b == null)
@@ -26,7 +26,10 @@ namespace ToGeometryConverter.Format.ILDA
 
         public IldaReader(FileInfo file) : base(file.Name)
         {
-            if (file.FullName == string.Empty) Console.Write("location empty");
+            if (file.FullName == string.Empty)
+            {
+                Console.Write("location empty");
+            }
         }
 
         /**
@@ -36,19 +39,18 @@ namespace ToGeometryConverter.Format.ILDA
          * @return list of all loaded frames
          */
 
-        public static GCCollection ReadFile(String location)
+        public static GCCollection ReadFile(string location)
         {
             IldaReader reader = new IldaReader(location);
             List<IldaFrame> ildaFrames = reader.getFramesFromBytes();
-            GCCollection gCElements = new GCCollection();
+            GCCollection gCElements = new GCCollection(GCTools.GetName(location));
             foreach (IldaFrame ildaFrame in ildaFrames)
             {
                 PointsElement points = new PointsElement();
                 foreach (IldaPoint ildaPoint in ildaFrame.points)
                 {
-                    var argb = Convert.ToInt32(ildaPoint.getColour());
+                    int argb = Convert.ToInt32(ildaPoint.getColour());
                     Color color = Color.FromArgb(argb);
-                    int temp = ildaPoint.getColour();
                     points.Add(new GCPoint3D()
                     {
                         X = ildaPoint.X,

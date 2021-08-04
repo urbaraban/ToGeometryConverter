@@ -11,7 +11,7 @@ namespace ToGeometryConverter.Format
 
         public string[] ShortName => new string[1] { "ild" };
 
-        public event EventHandler<Tuple<int, int>> Progressed;
+        public Tuple<int, int> Progress { get; private set; }
 
         public async Task<GCCollection> GetAsync(string Filename, double RoundStep)
         {

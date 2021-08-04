@@ -6,11 +6,11 @@ namespace ToGeometryConverter.Object.UDP
 {
     public static class GCByteReader
     {
-        public async static Task<GCCollection> Read(byte[] b)
+        public async static Task<GCCollection> Read(byte[] b, string Name)
         {
             if (b != null)
             {
-                GCCollection gCElements = new GCCollection();
+                GCCollection gCElements = new GCCollection(Name);
                 ByteParser fileParser = new ByteParser(b);
 
                 string hdr = fileParser.GetString(8);

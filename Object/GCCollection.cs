@@ -8,11 +8,11 @@ using ToGeometryConverter.Object.Elements;
 
 namespace ToGeometryConverter.Object
 {
-    public class GCCollection : IGCObject, IList<IGCElement>
+    public class GCCollection : IGCObject, IList<IGCObject>
     {
-        public List<IGCElement> Elements = new List<IGCElement>();
+        public List<IGCObject> Elements = new List<IGCObject>();
 
-        public string Name = string.Empty;
+        public string Name { get; set; } = string.Empty;
 
         public int IndexSelectElement = -1;
 
@@ -25,7 +25,7 @@ namespace ToGeometryConverter.Object
                     Rect first = Elements[0].Bounds;
                     double minX = first.X, minY = first.Y, /*minZ = first.Z,*/ maxX = first.X, maxY = first.Y; /*maxZ = first.Z*/
 
-                    foreach (IGCElement gCObject in Elements)
+                    foreach (IGCObject gCObject in Elements)
                     {
                         if ((gCObject is TextElement) == false)
                         {
@@ -43,6 +43,11 @@ namespace ToGeometryConverter.Object
             }
         }
 
+        public GCCollection(string Name)
+        {
+            this.Name = Name;
+        }
+
         public List<PointsElement> GetPointCollection(Transform3D Transform, double RoundStep, double RoundEdge)
         {
             List<PointsElement> points = new List<PointsElement>();
@@ -56,13 +61,21 @@ namespace ToGeometryConverter.Object
             return points;
         }
 
+        internal void AddRange(GCCollection gCCollection)
+        {
+            foreach (IGCElement gCElement in gCCollection)
+            {
+                this.Add(gCElement);
+            }
+        }
+
         public void AddRange(List<IGCElement> pointsElements) => Elements.AddRange(pointsElements);
 
         public void AddRange(GeometryGroup geometryGroup)
         {
             foreach(Geometry geometry in geometryGroup.Children)
             {
-                Elements.Add(new GeometryElement(geometry));
+                Elements.Add(new GeometryElement(geometry, geometry.GetType().Name));
             }
         }
 
@@ -77,56 +90,56 @@ namespace ToGeometryConverter.Object
             return geometryGroup;
         }
 
-        #region IList<IGCElement>
-        public IGCElement this[int index] { get => ((IList<IGCElement>)Elements)[index]; set => ((IList<IGCElement>)Elements)[index] = value; }
+        #region IList<IGCObject>
+        public IGCObject this[int index] { get => ((IList<IGCObject>)Elements)[index]; set => ((IList<IGCObject>)Elements)[index] = value; }
 
-        public int Count => ((ICollection<IGCElement>)Elements).Count;
+        public int Count => ((ICollection<IGCObject>)Elements).Count;
 
-        public bool IsReadOnly => ((ICollection<IGCElement>)Elements).IsReadOnly;
+        public bool IsReadOnly => ((ICollection<IGCObject>)Elements).IsReadOnly;
 
-        public void Add(IGCElement item)
+        public void Add(IGCObject item)
         {
-            ((ICollection<IGCElement>)Elements).Add(item);
+            ((ICollection<IGCObject>)Elements).Add(item);
         }
 
         public void Clear()
         {
-            ((ICollection<IGCElement>)Elements).Clear();
+            ((ICollection<IGCObject>)Elements).Clear();
         }
 
-        public bool Contains(IGCElement item)
+        public bool Contains(IGCObject item)
         {
-            return ((ICollection<IGCElement>)Elements).Contains(item);
+            return ((ICollection<IGCObject>)Elements).Contains(item);
         }
 
-        public void CopyTo(IGCElement[] array, int arrayIndex)
+        public void CopyTo(IGCObject[] array, int arrayIndex)
         {
-            ((ICollection<IGCElement>)Elements).CopyTo(array, arrayIndex);
+            ((ICollection<IGCObject>)Elements).CopyTo(array, arrayIndex);
         }
 
-        public IEnumerator<IGCElement> GetEnumerator()
+        public IEnumerator<IGCObject> GetEnumerator()
         {
-            return ((IEnumerable<IGCElement>)Elements).GetEnumerator();
+            return ((IEnumerable<IGCObject>)Elements).GetEnumerator();
         }
 
-        public int IndexOf(IGCElement item)
+        public int IndexOf(IGCObject item)
         {
-            return ((IList<IGCElement>)Elements).IndexOf(item);
+            return ((IList<IGCObject>)Elements).IndexOf(item);
         }
 
-        public void Insert(int index, IGCElement item)
+        public void Insert(int index, IGCObject item)
         {
-            ((IList<IGCElement>)Elements).Insert(index, item);
+            ((IList<IGCObject>)Elements).Insert(index, item);
         }
 
-        public bool Remove(IGCElement item)
+        public bool Remove(IGCObject item)
         {
-            return ((ICollection<IGCElement>)Elements).Remove(item);
+            return ((ICollection<IGCObject>)Elements).Remove(item);
         }
 
         public void RemoveAt(int index)
         {
-            ((IList<IGCElement>)Elements).RemoveAt(index);
+            ((IList<IGCObject>)Elements).RemoveAt(index);
         }
 
         IEnumerator IEnumerable.GetEnumerator()

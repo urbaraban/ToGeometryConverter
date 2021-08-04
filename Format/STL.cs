@@ -15,19 +15,17 @@ namespace ToGeometryConverter.Format
 
         public string[] ShortName => new string[1] { "stl" };
 
-        public event EventHandler<Tuple<int, int>> Progressed;
+        public Tuple<int, int> Progress { get; private set; }
 
         public async Task<GCCollection> GetAsync(string Filename, double RoundStep)
         {
-            GCCollection gCElements = new GCCollection();
+            GCCollection gCElements = new GCCollection(GCTools.GetName(Filename));
 
             using (FileStream fs = new FileStream(Filename, FileMode.Open))
             {
                 StlFile stlFile = StlFile.Load(fs);
 
                 List<Polygon> polygons = new List<Polygon>();
-
-                Progressed?.Invoke(this, new Tuple<int, int>(1, 4));
 
                 foreach (StlTriangle stlTriangle in stlFile.Triangles)
                 {

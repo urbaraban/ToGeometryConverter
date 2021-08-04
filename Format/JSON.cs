@@ -14,7 +14,7 @@ namespace ToGeometryConverter.Format
 
         public string[] ShortName => new string[1] { "json" };
 
-        public event EventHandler<Tuple<int, int>> Progressed;
+        public Tuple<int, int> Progress { get; private set; }
 
         public async Task<GCCollection> GetAsync(string Filename, double RoundStep)
         {
@@ -23,7 +23,7 @@ namespace ToGeometryConverter.Format
 
             JToken Contours = Main["coordinates_of_points_with_shrinkage"];
 
-            GCCollection collection = new GCCollection();
+            GCCollection collection = new GCCollection(GCTools.GetName(Filename));
             foreach (JToken contour in Contours)
             {
                 PointsElement element = new PointsElement() { IsClosed = true };

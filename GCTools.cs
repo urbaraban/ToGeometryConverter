@@ -426,12 +426,24 @@ namespace ToGeometryConverter
                 };
                 foreach (GCPoint3D point in ListPoints)
                 {
-                    Transform.TryTransform(point.GetPoint3D, out Point3D result);
-                    OutPoints.Add(result);
+                    if (Transform != null)
+                    {
+                        Transform.TryTransform(point.GetPoint3D, out Point3D result);
+                        OutPoints.Add(result);
+                    }
+                    else
+                    {
+                        OutPoints.Add(point.GetPoint3D);
+                    }
                 }
                 OutList.Add(OutPoints);
             }
             return OutList;
+        }
+
+        public static string GetName(string Filepath)
+        {
+            return Filepath.Split('\\').Last();
         }
 
     }

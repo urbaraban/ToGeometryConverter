@@ -9,6 +9,8 @@ namespace ToGeometryConverter.Object.Elements
 {
     public class PointsElement : IList<GCPoint3D>, IGCElement
     {
+        public string Name { get; set; }
+
         public List<GCPoint3D> Points
         {
             get => this._points;

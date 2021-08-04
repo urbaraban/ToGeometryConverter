@@ -14,7 +14,7 @@ namespace ToGeometryConverter.Format
         public string Name { get; } = "EasyCeiling";
         public string[] ShortName { get; } = new string[1] { "ec" };
 
-        public event EventHandler<Tuple<int, int>> Progressed;
+        public Tuple<int, int> Progress { get; private set; }
 
         public async Task<GCCollection> GetAsync(string filename, double RoundStep)
         {
@@ -48,13 +48,12 @@ namespace ToGeometryConverter.Format
                                 points.Add(new GCPoint3D(x, -y, 0));
                             }
 
-                            return new GCCollection(){
+                            return new GCCollection(GCTools.GetName(filename))
                             {
                                 new PointsElement()
                                 {
                                     Points = points
                                 }
-                            }
                             };
 
                         }

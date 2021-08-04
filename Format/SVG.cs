@@ -1,7 +1,6 @@
 ﻿using Svg;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -17,7 +16,7 @@ namespace ToGeometryConverter.Format
         public string Name { get; } = "Vector";
         public string[] ShortName { get; } = new string[1] { "svg" };
 
-        public event EventHandler<Tuple<int, int>> Progressed;
+        public Tuple<int, int> Progress { get; private set; }
 
         public async Task<GCCollection> GetAsync(string filepath, double RoundStep)
         {           
@@ -27,7 +26,7 @@ namespace ToGeometryConverter.Format
 
             GCCollection switchCollection(SvgElementCollection elements)
             {
-                GCCollection gccollection = new GCCollection();
+                GCCollection gccollection = new GCCollection(GCTools.GetName(filepath));
 
                 foreach (SvgElement svgElement in elements)
                 {
@@ -44,11 +43,11 @@ namespace ToGeometryConverter.Format
                                     pathPolygon.Segments.Add(new LineSegment(new Point(polygon.Points[i], polygon.Points[i + 1]), true));
                                 }
                                 pathPolygon.IsClosed = !(svgElement is SvgPolyline);
-                                gccollection.Add(new GeometryElement(GCTools.FigureToGeometry(pathPolygon)));
+                                gccollection.Add(new GeometryElement(GCTools.FigureToGeometry(pathPolygon), svgElement.ID));
                                 break;
 
                             case SvgCircle circle:
-                                gccollection.Add(new GeometryElement(new EllipseGeometry(new Point(circle.CenterX, circle.CenterY), circle.Radius, circle.Radius)));
+                                gccollection.Add(new GeometryElement(new EllipseGeometry(new Point(circle.CenterX, circle.CenterY), circle.Radius, circle.Radius), svgElement.ID));
                                 break;
 
                             case SvgText text:
@@ -57,18 +56,18 @@ namespace ToGeometryConverter.Format
                                 break;
 
                             case SvgEllipse ellipse:
-                                gccollection.Add(new GeometryElement(new EllipseGeometry(new Point(ellipse.CenterX, ellipse.CenterY), ellipse.RadiusX, ellipse.RadiusY)));
+                                gccollection.Add(new GeometryElement(new EllipseGeometry(new Point(ellipse.CenterX, ellipse.CenterY), ellipse.RadiusX, ellipse.RadiusY), svgElement.ID));
                                 break;
 
                             case SvgRectangle rectangle:
-                                gccollection.Add(new GeometryElement(new RectangleGeometry(new Rect(new Point(rectangle.X, rectangle.Y), new Size(rectangle.Width, rectangle.Height)))));
+                                gccollection.Add(new GeometryElement(new RectangleGeometry(new Rect(new Point(rectangle.X, rectangle.Y), new Size(rectangle.Width, rectangle.Height))), svgElement.ID));
                                 break;
 
                             case SvgLine line:
                                 PathFigure pathLine = new PathFigure();
                                 pathLine.StartPoint = new Point(line.StartX, line.StartY);
                                 pathLine.Segments.Add(new LineSegment(new Point(line.EndX, line.EndY), true));
-                                gccollection.Add(new GeometryElement(GCTools.FigureToGeometry(pathLine)));
+                                gccollection.Add(new GeometryElement(GCTools.FigureToGeometry(pathLine), svgElement.ID));
                                 break;
 
                             case SvgPath path:
@@ -124,6 +123,8 @@ namespace ToGeometryConverter.Format
                                         case "Svg.Pathing.SvgClosePathSegment":
                                             pathPath.Figures.Add(contourPath);
                                             break;
+                                        default:
+                                            break;
                                     }
                                 }
                                 if (!pathPath.Figures.Equals(contourPath))
@@ -144,5 +145,6 @@ namespace ToGeometryConverter.Format
                 return gccollection;
             }
         }
+
     }
 }

@@ -4,9 +4,9 @@ using ToGeometryConverter.Object;
 
 namespace ToGeometryConverter.Format
 {
-    interface IFormat
+    public interface IFormat
     {
-        public event EventHandler<Tuple<int, int>> Progressed;
+        public Tuple<int, int> Progress { get; }
 
         public string Name { get; }
         public string[] ShortName { get; }

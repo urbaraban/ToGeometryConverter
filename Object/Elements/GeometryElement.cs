@@ -7,14 +7,16 @@ namespace ToGeometryConverter.Object.Elements
 {
     public class GeometryElement : IGCElement
     {
+        public string Name { get; set; }
         public Geometry MyGeometry { get; set; }
 
         public bool IsClosed { get; set; }
 
-        public GeometryElement(Geometry geometry)
+        public GeometryElement(Geometry geometry, string Name)
         {
             MyGeometry = geometry.Clone();
             bounds = geometry.Bounds;
+            this.Name = Name;
         }
 
         public List<PointsElement> GetPointCollection(Transform3D Transform, double RoundStep, double RoundEdge)

@@ -17,13 +17,10 @@ namespace ToGeometryConverter
             new STL(),
             new ILD(),
             new MetaFile(),
-            new JSON(),
-            //new STP()
-            //new IGES(),
-            //new PDF()
+            new JSON()
         };
 
-        public async static Task<GCCollection> GetAsync(string Filename, double RoundStep)
+        public static IFormat GetConverter(string Filename)
         {
             string InFileFormat = Filename.Split('.').Last();
 
@@ -33,16 +30,11 @@ namespace ToGeometryConverter
                 {
                     if (frm.ToLower() == InFileFormat.ToLower())
                     {
-                        return await format.GetAsync(Filename, RoundStep);
+                        return format;
                     }
                 }
             }
             return null;
-        }
-
-        private static void Format_Progressed(object sender, Tuple<int, int> e)
-        {
-            throw new NotImplementedException();
         }
 
         public static string Filter

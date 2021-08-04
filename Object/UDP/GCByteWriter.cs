@@ -33,20 +33,23 @@ namespace ToGeometryConverter.Object.UDP
 
             for (int p = 0; p < gCElements.Count; p++)
             {
-                theBytes.Add(gCElements[p].IsClosed == true ? (byte)1 : (byte)0);
+                if (gCElements[p] is IGCElement element)
+                {
+                    theBytes.Add(element.IsClosed == true ? (byte)1 : (byte)0);
 
-                if (gCElements[p] is PointsElement pointCollection)
-                {
-                    theBytes.Add((byte)pointCollection.Count);
-                    for (int i = 0; i < pointCollection.Count; i++)
+                    if (gCElements[p] is PointsElement pointCollection)
                     {
-                        theBytes.Add((byte)pointCollection[i].X);
-                        theBytes.Add((byte)-pointCollection[i].Y);
+                        theBytes.Add((byte)pointCollection.Count);
+                        for (int i = 0; i < pointCollection.Count; i++)
+                        {
+                            theBytes.Add((byte)pointCollection[i].X);
+                            theBytes.Add((byte)-pointCollection[i].Y);
+                        }
                     }
-                }
-                else
-                {
-                    theBytes.Add((byte)0);
+                    else
+                    {
+                        theBytes.Add((byte)0);
+                    }
                 }
             }
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
@@ -10,6 +9,11 @@ namespace ToGeometryConverter.Object.Elements
 {
     public class TextElement : IGCElement
     {
+        public string Name
+        {
+            get => this.Text;
+            set => this.Text = value;
+        }
         public bool IsClosed { get; set; } = true;
 
         public string Text 
