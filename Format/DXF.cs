@@ -41,14 +41,45 @@ namespace ToGeometryConverter.Format
             if (dxfFile != null)
             {
                 GCCollection elements = new GCCollection(filename.Split('\\').Last());
-                foreach (DxfLayer layer in dxfFile.Layers)
+                IList<DxfLayer> dxfLayers = dxfFile.Layers;
+
+                if (dxfFile.Layers.Count == 0)
+                {
+                    dxfLayers = GetEntityLayer(dxfFile.Entities);
+                }
+
+                foreach (DxfLayer layer in dxfLayers)
                 {
                     elements.Add(ParseEntities(dxfFile.Entities, dxfFile.Blocks, layer.Name, CRS));
                 }
+
                 return elements;
             }
 
             return null;
+        }
+
+        private IList<DxfLayer> GetEntityLayer(IList<DxfEntity> entitys)
+        {
+            List<DxfLayer> dxfLayers = new List<DxfLayer>();
+            foreach (DxfEntity entity in entitys)
+            {
+                if (CheckLayer(entity.Layer) == false)
+                {
+                    dxfLayers.Add(new DxfLayer(entity.Layer));
+                }
+            }
+
+            bool CheckLayer (string LayerName)
+            {
+                foreach (DxfLayer layer in dxfLayers)
+                {
+                    if (layer.Name == LayerName) return true;
+                }
+
+                return false;
+            }
+            return dxfLayers;
         }
 
         public static GCCollection ParseEntities(IList<DxfEntity> entitys, IList<DxfBlock> blocks, string LayerName, double CRS)
@@ -57,7 +88,7 @@ namespace ToGeometryConverter.Format
 
             foreach (DxfEntity entity in entitys)
             {
-                if (entity.Layer == LayerName)
+                if (entity.Layer == LayerName || string.IsNullOrEmpty(LayerName))
                 {
                     if (entity is DxfInsert dxfInsert)
                     {
@@ -71,7 +102,10 @@ namespace ToGeometryConverter.Format
                     }
                     else
                     {
-                        gccollection.Add(new GeometryElement(GetGeometry(entity, CRS), entity.EntityTypeString));
+                        Geometry geometry = GetGeometry(entity, CRS);
+                        if (geometry != null) {
+                            gccollection.Add(new GeometryElement(geometry, entity.EntityTypeString));
+                        }
                     }
                 }
             }

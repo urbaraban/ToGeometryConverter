@@ -24,22 +24,25 @@ namespace ToGeometryConverter.Format
             JToken Contours = Main["coordinates_of_points_with_shrinkage"];
 
             GCCollection collection = new GCCollection(GCTools.GetName(Filename));
-            foreach (JToken contour in Contours)
+            if (Contours != null)
             {
-                PointsElement element = new PointsElement() { IsClosed = true };
-
-                JToken points = contour["points"];
-
-                foreach (JToken point in points)
+                foreach (JToken contour in Contours)
                 {
-                    element.Add(new GCPoint3D()
-                    {
-                        X = double.Parse(point["x"].ToString()),
-                        Y = double.Parse(point["y"].ToString()),
-                    });
-                }
+                    PointsElement element = new PointsElement() { IsClosed = true };
 
-                collection.Add(element);
+                    JToken points = contour["points"];
+
+                    foreach (JToken point in points)
+                    {
+                        element.Add(new GCPoint3D()
+                        {
+                            X = double.Parse(point["x"].ToString()),
+                            Y = double.Parse(point["y"].ToString()),
+                        });
+                    }
+
+                    collection.Add(element);
+                }
             }
 
             return collection;
