@@ -1,23 +1,20 @@
 ﻿using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Threading.Tasks;
 using ToGeometryConverter.Object;
 
 namespace ToGeometryConverter.Format
 {
-    class MetaFile : IFormat
+    public class MetaFile : GCFormat
     {
-        public string Name => "MetaFile";
+        public MetaFile() : base("MetaFile", new string[2] { "wmf", "emf" }) 
+        {
+            this.ReadFile = GetAsync;
+        }
 
-        public string[] ShortName => new string[2] { "wmf", "emf" };
 
-        public Tuple<int, int> Progress { get; private set; }
-
-        public async Task<GCCollection> GetAsync(string Filename, double RoundStep)
+        public async Task<object> GetAsync(string Filename, double RoundStep)
         {
             GCCollection elements = new GCCollection(GCTools.GetName(Filename));
-
 
             return elements;
         }

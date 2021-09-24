@@ -1,21 +1,19 @@
 ﻿using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
-using System;
 using System.Threading.Tasks;
-using ToGeometryConverter.Object;
 
 namespace ToGeometryConverter.Format
 {
-    class PDF : IFormat
+    class PDF : GCFormat
     {
-        public string Name => "PDF";
+        public PDF() : base("PDF", new string[1] { "pdf" }) 
+        {
+            this.ReadFile = GetAsync;
+        }
 
-        public string[] ShortName => new string[1] { "pdf" };
 
-        public Tuple<int, int> Progress { get; private set; }
-
-        public async Task<GCCollection> GetAsync(string Filename, double RoundStep)
+        public async Task<object> GetAsync(string Filename, double RoundStep)
         {
             PdfDocument pdfDocument = PdfReader.Open(Filename);
 

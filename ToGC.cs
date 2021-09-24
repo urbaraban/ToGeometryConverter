@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using ToGeometryConverter.Format;
-using ToGeometryConverter.Object;
 
 namespace ToGeometryConverter
 {
     public static class ToGC
     {
-        private static List<IFormat> Formats = new List<IFormat>()
+        /*public static List<GCFormat> Formats { get; } = new List<GCFormat>()
         {
             new SVG(),
             new DXF(),
@@ -18,13 +15,13 @@ namespace ToGeometryConverter
             new ILD(),
             new MetaFile(),
             new JSON()
-        };
+        };*/
 
-        public static IFormat GetConverter(string Filename)
+        public static GCFormat GetConverter(string Filename, ICollection<GCFormat> formats)
         {
             string InFileFormat = Filename.Split('.').Last();
 
-            foreach (IFormat format in Formats)
+            foreach (GCFormat format in formats)
             {
                 foreach (string frm in format.ShortName)
                 {
@@ -37,36 +34,40 @@ namespace ToGeometryConverter
             return null;
         }
 
-        public static string Filter
+        public static string GetAllFormatsFilter(ICollection<GCFormat> formats)
         {
-            get
+            string _allformat = string.Empty;
+            //add standart format
+            foreach (GCFormat format in formats)
             {
-                string _filter = string.Empty;
-                string _allformat = string.Empty;
-
-                foreach (IFormat format in Formats)
+                foreach (string frm in format.ShortName)
                 {
-                    foreach (string frm in format.ShortName)
-                    {
-                        _allformat += $"*.{frm};";
-                    }
+                    _allformat += $"*.{frm};";
                 }
-                _filter += $"All Format ({_allformat}) | {_allformat}";
-
-                foreach (IFormat format in Formats)
-                {
-                    _allformat = string.Empty;
-                    foreach (string frm in format.ShortName)
-                    {
-                        _allformat += $"*.{frm};";
-                    }
-                    _filter += $" | {format.Name}({_allformat}) | {_allformat}";
-                }
-
-                _filter += " | All Files (*.*)|*.*";
-
-                return _filter;
             }
+
+            return $"All Format ({_allformat}) | {_allformat}";
+        }
+
+        public static string GetFilter(GCFormat[] AddFormat, ICollection<GCFormat> formats)
+        {
+            string _filter = string.Empty;
+
+            _filter += GetAllFormatsFilter(formats);
+
+            foreach (GCFormat format in formats)
+            {
+                string strformat = string.Empty;
+                foreach (string frm in format.ShortName)
+                {
+                    strformat += $"*.{frm};";
+                }
+                _filter += $" | {format.Name}({strformat}) | {strformat}";
+            }
+
+            _filter += " | All Files (*.*)|*.*";
+
+            return _filter;
         }
     }
 

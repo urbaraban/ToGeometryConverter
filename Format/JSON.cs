@@ -8,15 +8,14 @@ using ToGeometryConverter.Object.Elements;
 
 namespace ToGeometryConverter.Format
 {
-    class JSON : IFormat
+    public class JSON : GCFormat
     {
-        public string Name => "json";
+        public JSON() : base("JSON", new string[1] { "json" }) 
+        {
+            this.ReadFile = GetAsync;
+        }
 
-        public string[] ShortName => new string[1] { "json" };
-
-        public Tuple<int, int> Progress { get; private set; }
-
-        public async Task<GCCollection> GetAsync(string Filename, double RoundStep)
+        private async Task<object> GetAsync(string Filename, double RoundStep)
         {
             string openStream = File.ReadAllText(Filename);
             JObject Main = (JObject)JsonConvert.DeserializeObject(openStream);

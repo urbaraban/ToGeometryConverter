@@ -111,7 +111,7 @@
     <Compile Include="Format\DEXCeil.cs" />
     <Compile Include="Format\DXF.cs" />
     <Compile Include="Format\EC.cs" />
-    <Compile Include="Format\IFormat.cs" />
+    <Compile Include="GCFormat.cs" />
     <Compile Include="Format\ILD.cs" />
     <Compile Include="Format\FileParser.cs" />
     <Compile Include="Format\ILDA\IldaFrame.cs" />

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Threading.Tasks;
 using ToGeometryConverter.Object;
 using ToGeometryConverter.Object.Elements;
 
@@ -39,7 +40,7 @@ namespace ToGeometryConverter.Format.ILDA
          * @return list of all loaded frames
          */
 
-        public static GCCollection ReadFile(string location)
+        public static async Task<GCCollection> ReadFile(string location)
         {
             IldaReader reader = new IldaReader(location);
             List<IldaFrame> ildaFrames = reader.getFramesFromBytes();

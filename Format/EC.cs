@@ -9,10 +9,9 @@ using ToGeometryConverter.Object.Elements;
 
 namespace ToGeometryConverter.Format
 {
-    public class EC : IFormat
+    public class EC : GCFormat
     {
-        public string Name { get; } = "EasyCeiling";
-        public string[] ShortName { get; } = new string[1] { "ec" };
+        public EC() : base("EasyCeiling", new string[1] { "ec" }) { }
 
         public Tuple<int, int> Progress { get; private set; }
 

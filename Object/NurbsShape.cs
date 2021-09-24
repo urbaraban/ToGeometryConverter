@@ -49,7 +49,7 @@ namespace ToGeometryConverter.Object
             return pathGeometry;
         }
 
-        private List<Shape> GetArcShapes()
+        private List<Shape> GetArcGeometry()
         {
             List<Shape> shapes = new List<Shape>();
 

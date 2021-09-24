@@ -5,17 +5,16 @@ using ToGeometryConverter.Object;
 
 namespace ToGeometryConverter.Format
 {
-    public class ILD : IFormat
+    public class ILD : GCFormat
     {
-        public string Name => "ILDA";
-
-        public string[] ShortName => new string[1] { "ild" };
-
-        public Tuple<int, int> Progress { get; private set; }
-
-        public async Task<GCCollection> GetAsync(string Filename, double RoundStep)
+        public ILD() : base("ILDA", new string[1] { "ild" }) 
         {
-            return IldaReader.ReadFile(Filename);
+            this.ReadFile = GetAsync;
+        }
+
+        private static async Task<object> GetAsync(string Filename, double RoundStep)
+        {
+            return await IldaReader.ReadFile(Filename);
         }
     }
 }

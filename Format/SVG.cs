@@ -12,21 +12,21 @@ using Size = System.Windows.Size;
 
 namespace ToGeometryConverter.Format
 {
-    public class SVG : IFormat
+    public class SVG : GCFormat
     {
-        public string Name { get; } = "Vector";
-        public string[] ShortName { get; } = new string[1] { "svg" };
+        public SVG() : base ("SVG Vector", new string[1] { "svg" })
+        {
+            ReadFile = GetAsync;
+        }
 
-        public Tuple<int, int> Progress { get; private set; }
-
-        public async Task<GCCollection> GetAsync(string filepath, double RoundStep)
+        private async Task<object> GetAsync(string filepath, double RoundStep)
         {           
             SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
 
             return SwitchCollection(svgDoc.Children, GCTools.GetName(filepath));
         }
 
-        public static GCCollection SwitchCollection(SvgElementCollection elements, string Name)
+        private static GCCollection SwitchCollection(SvgElementCollection elements, string Name)
         {
             GCCollection gccollection = new GCCollection(Name);
 

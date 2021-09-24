@@ -14,14 +14,14 @@ using Size = System.Windows.Size;
 
 namespace ToGeometryConverter.Format
 {
-    public class DXF : IFormat
+    public class DXF : GCFormat
     {
-        string IFormat.Name => "DXF";
-        string[] IFormat.ShortName => new string[1] { "dxf" };
+        public DXF () : base("DXF", new string[1] { "dxf" }) 
+        {
+            this.ReadFile = GetAsync;
+        }
 
-        public Tuple<int, int> Progress { get; private set; }
-
-        public async Task<GCCollection> GetAsync(string filename, double CRS)
+        private async Task<object> GetAsync(string filename, double CRS)
         {
             DxfFile dxfFile;
             try
@@ -82,7 +82,7 @@ namespace ToGeometryConverter.Format
             return dxfLayers;
         }
 
-        public static GCCollection ParseEntities(IList<DxfEntity> entitys, IList<DxfBlock> blocks, string LayerName, double CRS)
+        private static GCCollection ParseEntities(IList<DxfEntity> entitys, IList<DxfBlock> blocks, string LayerName, double CRS)
         {
             GCCollection gccollection = new GCCollection(LayerName);
 

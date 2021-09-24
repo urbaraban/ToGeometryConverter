@@ -8,17 +8,14 @@ using ToGeometryConverter.Object.Elements;
 
 namespace ToGeometryConverter.Format
 {
-    public class DEXCeil : IFormat
+    public class DEXCeil : GCFormat
     {
-        public string Name { get; } = "DEXCeil";
-        public string[] ShortName { get; } = new string[1] { "dc" };
-
-        public Tuple<int, int> Progress
+        public DEXCeil() : base("DEXCeil", new string[1] { "dc" }) 
         {
-            get;
+            this.ReadFile = GetAsync;
         }
 
-        public async Task<GCCollection> GetAsync(string Filename, double RoundStep)
+        private async Task<object> GetAsync(string Filename, double RoundStep)
         {
             if (File.Exists(Filename))
             {

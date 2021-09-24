@@ -9,15 +9,14 @@ using ToGeometryConverter.Object.Elements;
 
 namespace ToGeometryConverter.Format
 {
-    public class STL : IFormat
+    public class STL : GCFormat
     {
-        public string Name => "STL";
+        public STL() : base("STL", new string[1] { "stl" }) 
+        {
+            this.ReadFile = GetAsync;
+        }
 
-        public string[] ShortName => new string[1] { "stl" };
-
-        public Tuple<int, int> Progress { get; private set; }
-
-        public async Task<GCCollection> GetAsync(string Filename, double RoundStep)
+        private async Task<object> GetAsync(string Filename, double RoundStep)
         {
             GCCollection gCElements = new GCCollection(GCTools.GetName(Filename));
 
@@ -204,7 +203,7 @@ namespace ToGeometryConverter.Format
             return points;
         }
 
-        public static PointsElement GetPointsElement(List<Edge> edges)
+        private static PointsElement GetPointsElement(List<Edge> edges)
         {
             PointsElement points = new PointsElement() { IsClosed = true };
             points.Add(GCPoint3D.Parse(edges[0]));
@@ -220,7 +219,7 @@ namespace ToGeometryConverter.Format
             return points;
         }
 
-        public static bool EqalseVertex(StlVertex stlVertex1, StlVertex stlVertex2)
+        private static bool EqalseVertex(StlVertex stlVertex1, StlVertex stlVertex2)
         {
             double lenth = Math.Sqrt(
                 Math.Pow(stlVertex2.X - stlVertex1.X, 2) +
@@ -229,11 +228,11 @@ namespace ToGeometryConverter.Format
             return lenth == 0;
         }
 
-        public static bool EqalseEdge(Edge edge1, Edge edge2) =>
+        private static bool EqalseEdge(Edge edge1, Edge edge2) =>
             ((EqalseVertex(edge1.v1, edge2.v1) && EqalseVertex(edge1.v2, edge2.v2)) ||
             (EqalseVertex(edge1.v2, edge2.v1) && EqalseVertex(edge1.v1, edge2.v2)));
 
-        public static double AngleBetweenEdge(Edge edge1, Edge edge2)
+        private static double AngleBetweenEdge(Edge edge1, Edge edge2)
         {
             return Vector3D.AngleBetween(edge1.GetVector, edge2.GetVector);
         }
@@ -241,7 +240,7 @@ namespace ToGeometryConverter.Format
 
     }
 
-    public class Edge
+    internal class Edge
     {
         public StlVertex v1;
         public StlVertex v2;
@@ -259,7 +258,7 @@ namespace ToGeometryConverter.Format
         public override string ToString() => $"{v1.X}:{v1.Y}:{v1.Z};   {v2.X}:{v2.Y}:{v2.Z}";
     }
 
-    public struct Polygon
+    internal struct Polygon
     {
         public List<Edge> edges;
         public Vector3D normal;
