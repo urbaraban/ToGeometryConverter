@@ -11,10 +11,9 @@ namespace ToGeometryConverter.Format
 {
     public class STL : GCFormat
     {
-        public STL() : base("STL", new string[1] { "stl" }) 
-        {
-            this.ReadFile = GetAsync;
-        }
+        public STL() : base("STL", new string[1] { "stl" }) { }
+
+        public override Get ReadFile => GetAsync;
 
         private async Task<object> GetAsync(string Filename, double RoundStep)
         {
@@ -72,17 +71,17 @@ namespace ToGeometryConverter.Format
             return result;
         }
 
-        private static List<List<Edge>> GetPlaces(List<Polygon> Polygons)
+        private List<List<Edge>> GetPlaces(List<Polygon> Polygons)
         {
             List<List<Edge>> EdgePlace = new List<List<Edge>>();
 
             if (Polygons.Count > 0)
             {
-                ToGCLogger.Set(0, Polygons.Count, "Выделяем поверхности");
+                this.SetProgress(0, Polygons.Count, "Выделяем поверхности");
                 //Remove edge in polygons with angle beetwin < 10 grad
                 for (int first = 0; first < Polygons.Count - 1; first += 1)
                 {
-                    ToGCLogger.Set(first, Polygons.Count, $"{first}/{Polygons.Count}");
+                    this.SetProgress(first, Polygons.Count, $"{first}/{Polygons.Count}");
                     for (int second = first + 1; second < Polygons.Count; second += 1)
                     {
                         if (Vector3D.AngleBetween(Polygons[first].normal, Polygons[second].normal) < 20)
@@ -150,7 +149,7 @@ namespace ToGeometryConverter.Format
                 }
             }
 
-            ToGCLogger.End();
+            this.SetProgress(0, 0, string.Empty);
             return EdgePlace;
         }
 

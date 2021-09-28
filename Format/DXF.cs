@@ -16,10 +16,9 @@ namespace ToGeometryConverter.Format
 {
     public class DXF : GCFormat
     {
-        public DXF () : base("DXF", new string[1] { "dxf" }) 
-        {
-            this.ReadFile = GetAsync;
-        }
+        public DXF() : base("DXF", new string[1] { "dxf" }) { }
+
+        public override Get ReadFile => GetAsync;
 
         private async Task<object> GetAsync(string filename, double CRS)
         {
@@ -82,12 +81,15 @@ namespace ToGeometryConverter.Format
             return dxfLayers;
         }
 
-        private static GCCollection ParseEntities(IList<DxfEntity> entitys, IList<DxfBlock> blocks, string LayerName, double CRS)
+        private GCCollection ParseEntities(IList<DxfEntity> entitys, IList<DxfBlock> blocks, string LayerName, double CRS)
         {
             GCCollection gccollection = new GCCollection(LayerName);
 
             foreach (DxfEntity entity in entitys)
             {
+                int index = entitys.IndexOf(entity);
+                this.SetProgress?.Invoke(index, entitys.Count - 1, $"Parse SVG {index}/{entitys.Count - 1}");
+
                 if (entity.Layer == LayerName || string.IsNullOrEmpty(LayerName))
                 {
                     if (entity is DxfInsert dxfInsert)
@@ -109,6 +111,7 @@ namespace ToGeometryConverter.Format
                     }
                 }
             }
+            this.SetProgress?.Invoke(0, 99, string.Empty);
 
             return gccollection;
         }

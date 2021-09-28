@@ -17,6 +17,12 @@ namespace ToGeometryConverter
             new JSON()
         };*/
 
+        /// <summary>
+        /// Get converter class from filename
+        /// </summary>
+        /// <param name="Filename">Path fo file</param>
+        /// <param name="formats">Format List</param>
+        /// <returns></returns>
         public static GCFormat GetConverter(string Filename, ICollection<GCFormat> formats)
         {
             string InFileFormat = Filename.Split('.').Last();
@@ -34,6 +40,11 @@ namespace ToGeometryConverter
             return null;
         }
 
+        /// <summary>
+        /// Get All Format string for filter
+        /// </summary>
+        /// <param name="formats"></param>
+        /// <returns></returns>
         public static string GetAllFormatsFilter(ICollection<GCFormat> formats)
         {
             string _allformat = string.Empty;
@@ -49,11 +60,15 @@ namespace ToGeometryConverter
             return $"All Format ({_allformat}) | {_allformat}";
         }
 
+        /// <summary>
+        /// Get filter string for all format
+        /// </summary>
+        /// <param name="AddFormat"></param>
+        /// <param name="formats"></param>
+        /// <returns></returns>
         public static string GetFilter(GCFormat[] AddFormat, ICollection<GCFormat> formats)
         {
-            string _filter = string.Empty;
-
-            _filter += GetAllFormatsFilter(formats);
+            string _filter = GetAllFormatsFilter(formats);
 
             foreach (GCFormat format in formats)
             {
@@ -68,35 +83,6 @@ namespace ToGeometryConverter
             _filter += " | All Files (*.*)|*.*";
 
             return _filter;
-        }
-    }
-
-    public static class ToGCLogger
-    {
-        public static event EventHandler<ProgBarMessage> Progressed;
-
-        public static void Set(int Value, int MaxValue, string Message)
-        {
-            Progressed?.Invoke(null, new ProgBarMessage(Value, MaxValue, Message));
-        }
-        
-        public static void End()
-        {
-            Progressed?.Invoke(null, new ProgBarMessage(0, 1, string.Empty));
-        }
-    }
-
-    public struct ProgBarMessage
-    {
-        public int v;
-        public int m;
-        public string t;
-        
-        public ProgBarMessage(int Value, int MaxValue, string Text)
-        {
-            this.v = Value;
-            this.m = MaxValue;
-            this.t = Text;
         }
     }
 }

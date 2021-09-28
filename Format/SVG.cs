@@ -14,24 +14,27 @@ namespace ToGeometryConverter.Format
 {
     public class SVG : GCFormat
     {
-        public SVG() : base ("SVG Vector", new string[1] { "svg" })
-        {
-            ReadFile = GetAsync;
-        }
+        public SVG() : base("SVG Vector", new string[1] { "svg" }) { }
+
+        public override Get ReadFile => GetAsync;
+
 
         private async Task<object> GetAsync(string filepath, double RoundStep)
         {           
             SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
 
-            return SwitchCollection(svgDoc.Children, GCTools.GetName(filepath));
+            return await SwitchCollection(svgDoc.Children, GCTools.GetName(filepath));
         }
 
-        private static GCCollection SwitchCollection(SvgElementCollection elements, string Name)
+        private async Task<GCCollection> SwitchCollection(SvgElementCollection elements, string Name)
         {
             GCCollection gccollection = new GCCollection(Name);
-
+            this.SetProgress?.Invoke(0, elements.Count, "Parse SVG");
             foreach (SvgElement svgElement in elements)
             {
+                int index = elements.IndexOf(svgElement);
+                this.SetProgress?.Invoke(index, elements.Count - 1, $"Parse SVG {index}/{elements.Count - 1}");
+
                 if (svgElement.Visibility == "visible")
                 {
                     switch (svgElement)
@@ -130,12 +133,13 @@ namespace ToGeometryConverter.Format
                             break;
 
                         case SvgGroup group:
-                            gccollection.Add(SwitchCollection(group.Children, group.ID));
+                            gccollection.Add(await SwitchCollection(group.Children, group.ID));
                             break;
                     }
                 }
             }
 
+            this.SetProgress?.Invoke(0, 99, string.Empty);
             return gccollection;
         }
 
