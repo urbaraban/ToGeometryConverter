@@ -14,7 +14,11 @@ namespace ToGeometryConverter
 {
     public static class GCTools
     {
-        //public static PathGeometry Geometry { get; set; }
+        public delegate void Logging(string message);
+        public static Logging Log;
+
+        public delegate void Progress(int position, int max, string message);
+        public static Progress SetProgress;
 
         public static Point Pftp(System.Drawing.PointF point)
         {
@@ -446,5 +450,21 @@ namespace ToGeometryConverter
             return Filepath.Split('\\').Last();
         }
 
+        public static GCFormat GetConverter(string Filename, ICollection<GCFormat> formats)
+        {
+            string InFileFormat = Filename.Split('.').Last();
+
+            foreach (GCFormat format in formats)
+            {
+                foreach (string frm in format.ShortName)
+                {
+                    if (frm.ToLower() == InFileFormat.ToLower())
+                    {
+                        return format;
+                    }
+                }
+            }
+            return null;
+        }
     }
 }

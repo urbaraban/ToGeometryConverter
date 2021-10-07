@@ -36,23 +36,26 @@ namespace ToGeometryConverter.Format
                 dxfFile = null;
             }
 
-           
+
             if (dxfFile != null)
             {
-                GCCollection elements = new GCCollection(filename.Split('\\').Last());
-                IList<DxfLayer> dxfLayers = dxfFile.Layers;
-
-                if (dxfFile.Layers.Count == 0)
+                return await Task<object>.Run(async () =>
                 {
-                    dxfLayers = GetEntityLayer(dxfFile.Entities);
-                }
+                    GCCollection elements = new GCCollection(filename.Split('\\').Last());
+                    IList<DxfLayer> dxfLayers = dxfFile.Layers;
 
-                foreach (DxfLayer layer in dxfLayers)
-                {
-                    elements.Add(ParseEntities(dxfFile.Entities, dxfFile.Blocks, layer.Name, CRS));
-                }
+                    if (dxfFile.Layers.Count == 0)
+                    {
+                        dxfLayers = GetEntityLayer(dxfFile.Entities);
+                    }
 
-                return elements;
+                    foreach (DxfLayer layer in dxfLayers)
+                    {
+                        elements.Add(ParseEntities(dxfFile.Entities, dxfFile.Blocks, layer.Name, CRS));
+                    }
+
+                    return elements;
+                });
             }
 
             return null;
@@ -88,7 +91,7 @@ namespace ToGeometryConverter.Format
             foreach (DxfEntity entity in entitys)
             {
                 int index = entitys.IndexOf(entity);
-                this.SetProgress?.Invoke(index, entitys.Count - 1, $"Parse SVG {index}/{entitys.Count - 1}");
+                GCTools.SetProgress?.Invoke(index, entitys.Count - 1, $"Parse SVG {index}/{entitys.Count - 1}");
 
                 if (entity.Layer == LayerName || string.IsNullOrEmpty(LayerName))
                 {
@@ -111,7 +114,7 @@ namespace ToGeometryConverter.Format
                     }
                 }
             }
-            this.SetProgress?.Invoke(0, 99, string.Empty);
+            GCTools.SetProgress?.Invoke(0, 99, string.Empty);
 
             return gccollection;
         }

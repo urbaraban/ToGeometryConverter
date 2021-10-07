@@ -14,7 +14,8 @@ namespace ToGeometryConverter.Object.Elements
 
         public GeometryElement(Geometry geometry, string Name)
         {
-            MyGeometry = geometry.Clone();
+            MyGeometry = geometry;
+            MyGeometry.Freeze();
             bounds = geometry.Bounds;
             this.Name = Name;
         }

@@ -138,7 +138,6 @@
     <Compile Include="Object\Elements\GeometryElement.cs" />
     <Compile Include="Object\Elements\PointsElement.cs" />
     <Compile Include="Object\Elements\TextElement.cs" />
-    <Compile Include="ToGC.cs" />
     <Compile Include="GCTools.cs" />
     <Compile Include="Object\NurbsShape.cs" />
     <Compile Include="Object\RationalBSplinePoint.cs" />

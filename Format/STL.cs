@@ -17,38 +17,41 @@ namespace ToGeometryConverter.Format
 
         private async Task<object> GetAsync(string Filename, double RoundStep)
         {
-            GCCollection gCElements = new GCCollection(GCTools.GetName(Filename));
-
-            using (FileStream fs = new FileStream(Filename, FileMode.Open))
+            return await Task<object>.Run(async () =>
             {
-                StlFile stlFile = StlFile.Load(fs);
+                GCCollection gCElements = new GCCollection(GCTools.GetName(Filename));
 
-                List<Polygon> polygons = new List<Polygon>();
-
-                foreach (StlTriangle stlTriangle in stlFile.Triangles)
+                using (FileStream fs = new FileStream(Filename, FileMode.Open))
                 {
-                    polygons.Add(
-                        new Polygon(
-                        new Edge(stlTriangle.Vertex1, stlTriangle.Vertex2),
-                        new Edge(stlTriangle.Vertex3, stlTriangle.Vertex1),
-                        new Edge(stlTriangle.Vertex2, stlTriangle.Vertex3),
-                        stlTriangle.Normal.Normalize()
-                        ));
+                    StlFile stlFile = StlFile.Load(fs);
+
+                    List<Polygon> polygons = new List<Polygon>();
+
+                    foreach (StlTriangle stlTriangle in stlFile.Triangles)
+                    {
+                        polygons.Add(
+                            new Polygon(
+                            new Edge(stlTriangle.Vertex1, stlTriangle.Vertex2),
+                            new Edge(stlTriangle.Vertex3, stlTriangle.Vertex1),
+                            new Edge(stlTriangle.Vertex2, stlTriangle.Vertex3),
+                            stlTriangle.Normal.Normalize()
+                            ));
+                    }
+
+                    List<List<Edge>> edges = GetPlaces(polygons);
+
+                    foreach (List<Edge> place in edges)
+                    {
+                        if (place.Count > stlFile.Triangles.Count * 0.01)
+                            gCElements.AddRange(GetContourPlaces(place));
+                        //gCElements.Add(GetContour(STL.SortEdges(place)));
+                    }
+
+                    fs.Close();
                 }
 
-                List<List<Edge>> edges = GetPlaces(polygons);
-
-                foreach (List<Edge> place in edges)
-                {
-                    if (place.Count > stlFile.Triangles.Count * 0.01)
-                        gCElements.AddRange(GetContourPlaces(place));
-                    //gCElements.Add(GetContour(STL.SortEdges(place)));
-                }
-
-                fs.Close();
-            }
-
-            return gCElements;
+                return gCElements;
+            });
         }
 
         private static List<Edge> FindBoundary(List<Edge> aEdges)
@@ -77,11 +80,14 @@ namespace ToGeometryConverter.Format
 
             if (Polygons.Count > 0)
             {
-                this.SetProgress(0, Polygons.Count, "Выделяем поверхности");
+                GCTools.SetProgress(0, Polygons.Count, "Выделяем поверхности");
                 //Remove edge in polygons with angle beetwin < 10 grad
+                GCTools.SetProgress?.Invoke(0, Polygons.Count - 1, $"Parse STL {0}/{Polygons.Count - 1}");
                 for (int first = 0; first < Polygons.Count - 1; first += 1)
                 {
-                    this.SetProgress(first, Polygons.Count, $"{first}/{Polygons.Count}");
+                    GCTools.SetProgress?.Invoke(first, Polygons.Count - 1, $"Parse STL {0}/{Polygons.Count - 1}");
+
+                    GCTools.SetProgress(first, Polygons.Count, $"{first}/{Polygons.Count}");
                     for (int second = first + 1; second < Polygons.Count; second += 1)
                     {
                         if (Vector3D.AngleBetween(Polygons[first].normal, Polygons[second].normal) < 20)
@@ -149,7 +155,7 @@ namespace ToGeometryConverter.Format
                 }
             }
 
-            this.SetProgress(0, 0, string.Empty);
+            GCTools.SetProgress(0, 0, string.Empty);
             return EdgePlace;
         }
 
