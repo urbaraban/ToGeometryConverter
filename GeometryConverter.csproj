@@ -126,9 +126,6 @@
     <Compile Include="Format\ILDA\PicReader.cs" />
     <Compile Include="Format\JSON.cs" />
     <Compile Include="Format\MetaFile.cs" />
-    <Compile Include="Object\UDP\GCByteReader.cs" />
-    <Compile Include="Object\UDP\GCByteWriter.cs" />
-    <Compile Include="Object\UDP\UdpLaserListener.cs" />
     <Compile Include="Format\PDF.cs" />
     <Compile Include="Format\STL.cs" />
     <Compile Include="Object\Elements\GCPoint3D.cs" />
