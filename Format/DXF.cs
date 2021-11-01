@@ -205,15 +205,23 @@ namespace ToGeometryConverter.Format
                         double radian = Math.Atan(dxfLwPolyline.Vertices[i].Bulge) * 4;
                         double radius = CalBulgeRadius(GCTools.DxfLwVtp(dxfLwPolyline.Vertices[i]), GCTools.DxfLwVtp(dxfLwPolyline.Vertices[i + 1]), dxfLwPolyline.Vertices[i].Bulge);
 
-                        lwPolyLineFigure.Segments.Add(
-                            new ArcSegment(
-                                GCTools.DxfLwVtp(dxfLwPolyline.Vertices[i + 1]),
-                                new Size(radius, radius),
-                                Math.Abs(radian * 180 / Math.PI),
-                                Math.Abs(dxfLwPolyline.Vertices[i].Bulge) > 1,
-                                dxfLwPolyline.Vertices[i].Bulge < 0 ? SweepDirection.Clockwise : SweepDirection.Counterclockwise,
-                                true
-                            ));
+                        if (radian != 0 || radius != 0)
+                        {
+                            lwPolyLineFigure.Segments.Add(
+                                new ArcSegment(
+                                    GCTools.DxfLwVtp(dxfLwPolyline.Vertices[i + 1]),
+                                    new Size(radius, radius),
+                                    Math.Abs(radian * 180 / Math.PI),
+                                    Math.Abs(dxfLwPolyline.Vertices[i].Bulge) > 1,
+                                    dxfLwPolyline.Vertices[i].Bulge < 0 ? SweepDirection.Clockwise : SweepDirection.Counterclockwise,
+                                    true
+                                ));
+                        }
+                        else
+                        {
+                            lwPolyLineFigure.Segments.Add(
+                                new LineSegment(GCTools.DxfLwVtp(dxfLwPolyline.Vertices[i + 1]), true));
+                        }
 
                         //points1.Add(GCTools.DxfLwVtp(dxfLwPolyline.Vertices[i % dxfLwPolyline.Vertices.Count]));
                     }

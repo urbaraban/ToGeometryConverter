@@ -2,6 +2,8 @@
 using Svg.Pathing;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -18,6 +20,7 @@ namespace ToGeometryConverter.Format
 
         public override Get ReadFile => GetAsync;
 
+       
 
         private async Task<object> GetAsync(string filepath, double RoundStep)
         {
@@ -28,7 +31,18 @@ namespace ToGeometryConverter.Format
             });
         }
 
-        private async Task<GCCollection> SwitchCollection(SvgElementCollection elements, string Name)
+        public async Task<object> ParseClip(string text)
+        {
+            return await Task<object>.Run(async () =>
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(text);
+                MemoryStream stream = new MemoryStream(bytes);
+                SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(stream);
+                return await SwitchCollection(svgDoc.Children, "Clipboard");
+            });
+        }
+
+       private async Task<GCCollection> SwitchCollection(SvgElementCollection elements, string Name)
         {
             GCCollection gccollection = new GCCollection(Name);
             GCTools.SetProgress?.Invoke(0, elements.Count, "Parse SVG");
