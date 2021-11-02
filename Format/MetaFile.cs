@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Oxage.Wmf;
+using System;
 using System.Threading.Tasks;
 using ToGeometryConverter.Object;
 
@@ -15,6 +16,9 @@ namespace ToGeometryConverter.Format
         public async Task<object> GetAsync(string Filename, double RoundStep)
         {
             GCCollection elements = new GCCollection(GCTools.GetName(Filename));
+
+            WmfDocument wmf = new WmfDocument();
+            wmf.Load(Filename);
 
             return elements;
         }

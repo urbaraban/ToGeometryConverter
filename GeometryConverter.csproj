@@ -73,6 +73,9 @@
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\MonchaCadView\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="Oxage.Wmf, Version=0.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\MonchaCadView\packages\Oxage.Wmf.0.5.0\lib\net461\Oxage.Wmf.dll</HintPath>
+    </Reference>
     <Reference Include="PdfSharp, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
       <HintPath>packages\PDFsharp.1.50.5147\lib\net20\PdfSharp.dll</HintPath>
     </Reference>
@@ -115,15 +118,6 @@
     <Compile Include="Format\DXF.cs" />
     <Compile Include="Format\EC.cs" />
     <Compile Include="GCFormat.cs" />
-    <Compile Include="Format\ILD.cs" />
-    <Compile Include="Format\FileParser.cs" />
-    <Compile Include="Format\ILDA\IldaFrame.cs" />
-    <Compile Include="Format\ILDA\IldaPalette.cs" />
-    <Compile Include="Format\ILDA\IldaPoint.cs" />
-    <Compile Include="Format\ILDA\IldaPointGen.cs" />
-    <Compile Include="Format\ILDA\IldaReader.cs" />
-    <Compile Include="Format\ILDA\IldaWriter.cs" />
-    <Compile Include="Format\ILDA\PicReader.cs" />
     <Compile Include="Format\JSON.cs" />
     <Compile Include="Format\MetaFile.cs" />
     <Compile Include="Format\PDF.cs" />

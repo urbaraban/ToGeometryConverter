@@ -25,9 +25,13 @@ namespace ToGeometryConverter
             return new Point(point.X, point.Y);
         }
 
-        public static Point Dxftp(DxfPoint point)
+        public static Point Dxftp(DxfPoint point, DxfVector vector)
         {
-            return new Point(point.X, -point.Y);
+            return new Point()
+            {
+                X = point.X + point.X * vector.Z * 2,
+                Y = -(point.Y + point.Y * vector.X * 2),
+            };
         }
 
         public static Point DxfCtp(DxfControlPoint point)

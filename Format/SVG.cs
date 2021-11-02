@@ -31,7 +31,7 @@ namespace ToGeometryConverter.Format
             });
         }
 
-        public async Task<object> ParseClip(string text)
+        public async Task<object> Parse(string text)
         {
             return await Task<object>.Run(async () =>
             {
