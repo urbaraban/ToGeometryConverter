@@ -5,10 +5,9 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Linq;
 using System.Windows.Media;
-using ToGeometryConverter.Object;
-using System.Windows.Media.Media3D;
 using ToGeometryConverter.Object.Elements;
-using System.Windows.Threading;
+using System.Windows.Media.Media3D;
+using System.Numerics;
 
 namespace ToGeometryConverter
 {
@@ -25,19 +24,21 @@ namespace ToGeometryConverter
             return new Point(point.X, point.Y);
         }
 
-        public static Point Dxftp(DxfPoint point, DxfVector vector)
+        public static Point Dxftp(DxfPoint point, DxfVector normal)
         {
-            return new Point()
+            Vector3 VectorNormal = new Vector3((float)normal.X, (float)normal.Y, (float)normal.Z);
+            Vector3 VectorPoint = new Vector3((float)point.X, (float)point.Y, (float)point.Z);
+            System.Numerics.Quaternion quaternion = System.Numerics.Quaternion.CreateFromAxisAngle(VectorNormal, 0);
+            Vector3 outVector = Vector3.Transform(VectorPoint, quaternion);
+            if (normal.Z < 0) 
+            { }
+            return new Point
             {
-                X = point.X + point.X * vector.Z * 2,
-                Y = -(point.Y + point.Y * vector.X * 2),
+                X = outVector.X,
+                Y = outVector.Y,
             };
         }
 
-        public static Point DxfCtp(DxfControlPoint point)
-        {
-            return new Point(point.Point.X, -point.Point.Y);
-        }
 
         public static Point DxfLwVtp(DxfLwPolylineVertex point)
         {

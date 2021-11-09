@@ -40,6 +40,7 @@ namespace ToGeometryConverter.Format
 
             if (dxfFile != null)
             {
+                GCTools.Log?.Invoke($"Loaded dxf: {filename}");
                 return await Task<object>.Run(async () =>
                 {
                     GCCollection elements = new GCCollection(filename.Split('\\').Last());
@@ -91,8 +92,9 @@ namespace ToGeometryConverter.Format
 
             foreach (DxfEntity entity in entitys)
             {
+
                 int index = entitys.IndexOf(entity);
-                GCTools.SetProgress?.Invoke(index, entitys.Count - 1, $"Parse SVG {index}/{entitys.Count - 1}");
+                GCTools.SetProgress?.Invoke(index, entitys.Count - 1, $"Parse DXF {index}/{entitys.Count - 1}");
 
                 if (entity.Layer == LayerName || string.IsNullOrEmpty(LayerName))
                 {
@@ -125,23 +127,23 @@ namespace ToGeometryConverter.Format
             switch (entity)
             {
                 case DxfText dxfText:
-                    return new TextElement(dxfText.Value, 16,
-                        new System.Windows.Media.Media3D.Point3D(dxfText.SecondAlignmentPoint.X, -dxfText.SecondAlignmentPoint.Y, 0));
+                    Point point = GCTools.Dxftp(dxfText.SecondAlignmentPoint, dxfText.Normal);
+                    return new TextElement(dxfText.Value, 16, new System.Windows.Media.Media3D.Point3D(point.X, point.Y, 0));
 
 
                 case DxfMText MText:
-                    DxfMText dxfMText = (DxfMText)entity;
+                    Point Mpoint = GCTools.Dxftp(MText.InsertionPoint, new DxfVector(0,0,1));
                     return new TextElement(MText.Text, 16,
                                     new System.Windows.Media.Media3D.Point3D(MText.InsertionPoint.X, -MText.InsertionPoint.Y, 0));
 
                 case DxfLine line:
-                    return new GeometryElement(new LineGeometry(GCTools.Dxftp(line.P1, new DxfVector()), GCTools.Dxftp(line.P2, new DxfVector())), entity.EntityType.ToString());
+                    return new GeometryElement(new LineGeometry(GCTools.Dxftp(line.P1, new DxfVector(0,0,1)), GCTools.Dxftp(line.P2, new DxfVector(0,0,1))), entity.EntityType.ToString());
 
                 case DxfHelix dxfHelix:
                     PointCollection points = new PointCollection(GetSpiralPoints(dxfHelix, CRS));
                     return new GeometryElement(GCTools.FigureToGeometry(new PathFigure()
                         {
-                            StartPoint = GCTools.Dxftp(dxfHelix.AxisBasePoint, new DxfVector()),
+                            StartPoint = GCTools.Dxftp(dxfHelix.AxisBasePoint, new DxfVector(0,0,1)),
                             Segments = new PathSegmentCollection()
                             {
                                         new PolyLineSegment(points, true)
@@ -149,8 +151,10 @@ namespace ToGeometryConverter.Format
                         }), entity.EntityType.ToString());
 
                 case DxfMLine dxfMLine:
-                    PathFigure MLineFigure = new PathFigure();
-                    MLineFigure.StartPoint = GCTools.Dxftp(dxfMLine.Vertices[0], dxfMLine.Normal);
+                    PathFigure MLineFigure = new PathFigure
+                    {
+                        StartPoint = GCTools.Dxftp(dxfMLine.Vertices[0], dxfMLine.Normal)
+                    };
 
                     //Идем по точкам
                     for (int i = 1; i < dxfMLine.Vertices.Count; i++)
@@ -174,10 +178,8 @@ namespace ToGeometryConverter.Format
                                             GCTools.Dxftp(arcPoint2, dxfArc.Normal),
                                         new Size(dxfArc.Radius, dxfArc.Radius),
                                         (360 + dxfArc.EndAngle - dxfArc.StartAngle) % 360,
-                                        (360 + dxfArc.EndAngle - dxfArc.StartAngle) % 360 > 180,
-                                         dxfArc.Normal.Z > 0 ? 
-                                         SweepDirection.Counterclockwise
-                                         : SweepDirection.Clockwise,
+                                        (360 + dxfArc.EndAngle - dxfArc.StartAngle) % 360 > 180, 
+                                         SweepDirection.Counterclockwise,
                                         true));
 
                     return new GeometryElement(GCTools.FigureToGeometry(ArcContour), entity.EntityType.ToString());
@@ -198,9 +200,10 @@ namespace ToGeometryConverter.Format
                         new RotateTransform(MajorAngle * 180 / Math.PI)), entity.EntityType.ToString());
 
                 case DxfLwPolyline dxfLwPolyline:
-                    PathFigure lwPolyLineFigure = new PathFigure();
-
-                    lwPolyLineFigure.StartPoint = GCTools.DxfLwVtp(dxfLwPolyline.Vertices[0]);
+                    PathFigure lwPolyLineFigure = new PathFigure
+                    {
+                        StartPoint = GCTools.DxfLwVtp(dxfLwPolyline.Vertices[0])
+                    };
 
                     for (int i = 0; i < dxfLwPolyline.Vertices.Count - 1; i += 1)
                     {
@@ -303,11 +306,11 @@ namespace ToGeometryConverter.Format
             for (int i = 1; Math.Abs(dtheta * i)/ (Math.PI * 2) <= dxfHelix.NumberOfTurns; i++)
             {
                 double theta = (StartAngle + dtheta * i);
-                Console.WriteLine($"Th: {theta.ToString()}/{Math.PI * 2 * dxfHelix.NumberOfTurns}");
+                Console.WriteLine($"Th: {theta}/{Math.PI * 2 * dxfHelix.NumberOfTurns}");
                 // Calculate r.
                 double r = HelixRadius / steps  * i;
 
-                Console.WriteLine($"R: {r.ToString()}/{HelixRadius}");
+                Console.WriteLine($"R: {r}/{HelixRadius}");
 
                 // Convert to Cartesian coordinates.
                 double x = r * Math.Cos(theta);

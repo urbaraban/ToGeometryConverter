@@ -20,29 +20,27 @@ namespace ToGeometryConverter.Format
 
         public override Get ReadFile => GetAsync;
 
-       
-
         private async Task<object> GetAsync(string filepath, double RoundStep)
         {
-            return await Task<object>.Run(async () => { 
+            return await Task<object>.Run(() => { 
                 SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
                 GCTools.Log?.Invoke($"Load {this.Name} file: {filepath}");
-                return await SwitchCollection(svgDoc.Children, GCTools.GetName(filepath));
+                return SwitchCollection(svgDoc.Children, GCTools.GetName(filepath));
             });
         }
 
         public async Task<object> Parse(string text)
         {
-            return await Task<object>.Run(async () =>
+            return await Task<object>.Run(() =>
             {
                 byte[] bytes = Encoding.UTF8.GetBytes(text);
                 MemoryStream stream = new MemoryStream(bytes);
                 SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(stream);
-                return await SwitchCollection(svgDoc.Children, "Clipboard");
+                return SwitchCollection(svgDoc.Children, "Clipboard");
             });
         }
 
-       private async Task<GCCollection> SwitchCollection(SvgElementCollection elements, string Name)
+       private GCCollection SwitchCollection(SvgElementCollection elements, string Name)
         {
             GCCollection gccollection = new GCCollection(Name);
             GCTools.SetProgress?.Invoke(0, elements.Count, "Parse SVG");
@@ -151,7 +149,7 @@ namespace ToGeometryConverter.Format
                                 break;
 
                             case SvgGroup group:
-                                gccollection.Add(await SwitchCollection(group.Children, group.ID));
+                                gccollection.Add(SwitchCollection(group.Children, group.ID));
                                 break;
                         }
                     }
