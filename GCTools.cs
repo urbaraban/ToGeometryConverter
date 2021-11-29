@@ -13,7 +13,7 @@ namespace ToGeometryConverter
 {
     public static class GCTools
     {
-        public delegate void Logging(string message);
+        public delegate void Logging(string message, string sender);
         public static Logging Log;
 
         public delegate void Progress(int position, int max, string message);
@@ -26,16 +26,14 @@ namespace ToGeometryConverter
 
         public static Point Dxftp(DxfPoint point, DxfVector normal)
         {
-            Vector3 VectorNormal = new Vector3((float)normal.X, (float)normal.Y, (float)normal.Z);
+            Vector3 VectorNormal = new Vector3((float)normal.X, (float)normal.Z, (float)normal.Y);
             Vector3 VectorPoint = new Vector3((float)point.X, (float)point.Y, (float)point.Z);
-            System.Numerics.Quaternion quaternion = System.Numerics.Quaternion.CreateFromAxisAngle(VectorNormal, 0);
+            System.Numerics.Quaternion quaternion = System.Numerics.Quaternion.CreateFromAxisAngle(VectorNormal, (float)(VectorNormal.Y < 0 ? Math.PI : 0));
             Vector3 outVector = Vector3.Transform(VectorPoint, quaternion);
-            if (normal.Z < 0) 
-            { }
             return new Point
             {
                 X = outVector.X,
-                Y = outVector.Y,
+                Y = -outVector.Y,
             };
         }
 

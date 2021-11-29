@@ -22,10 +22,14 @@ namespace ToGeometryConverter.Format
 
         private async Task<object> GetAsync(string filepath, double RoundStep)
         {
-            return await Task<object>.Run(() => { 
-                SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
-                GCTools.Log?.Invoke($"Load {this.Name} file: {filepath}");
-                return SwitchCollection(svgDoc.Children, GCTools.GetName(filepath));
+            return await Task<object>.Run(() => {
+                if (File.Exists(filepath) == true)
+                {
+                    SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
+                    GCTools.Log?.Invoke($"Load {this.Name} file: {filepath}", "GCTool");
+                    return SwitchCollection(svgDoc.Children, GCTools.GetName(filepath));
+                }
+                return null;
             });
         }
 
@@ -157,7 +161,7 @@ namespace ToGeometryConverter.Format
             }
             else
             {
-                GCTools.Log($"{Name}: Elements count > 300 !!!");
+                GCTools.Log($"{Name}: Elements count > 300 !!!", "GCTool");
             }
 
             GCTools.SetProgress?.Invoke(0, 99, string.Empty);

@@ -40,7 +40,7 @@ namespace ToGeometryConverter.Format
 
             if (dxfFile != null)
             {
-                GCTools.Log?.Invoke($"Loaded dxf: {filename}");
+                GCTools.Log?.Invoke($"Loaded dxf: {filename}", "GCTool");
                 return await Task<object>.Run(async () =>
                 {
                     GCCollection elements = new GCCollection(filename.Split('\\').Last());
@@ -127,17 +127,22 @@ namespace ToGeometryConverter.Format
             switch (entity)
             {
                 case DxfText dxfText:
-                    Point point = GCTools.Dxftp(dxfText.SecondAlignmentPoint, dxfText.Normal);
+                    Point point = GCTools.Dxftp(dxfText.Location, dxfText.Normal);
                     return new TextElement(dxfText.Value, 16, new System.Windows.Media.Media3D.Point3D(point.X, point.Y, 0));
 
 
                 case DxfMText MText:
-                    Point Mpoint = GCTools.Dxftp(MText.InsertionPoint, new DxfVector(0,0,1));
+                    Point Mpoint = GCTools.Dxftp(MText.InsertionPoint, new DxfVector(0, 0, 1));
                     return new TextElement(MText.Text, 16,
-                                    new System.Windows.Media.Media3D.Point3D(MText.InsertionPoint.X, -MText.InsertionPoint.Y, 0));
+                                    new System.Windows.Media.Media3D.Point3D(Mpoint.X, Mpoint.Y, 0));
 
                 case DxfLine line:
-                    return new GeometryElement(new LineGeometry(GCTools.Dxftp(line.P1, new DxfVector(0,0,1)), GCTools.Dxftp(line.P2, new DxfVector(0,0,1))), entity.EntityType.ToString());
+                    return new GeometryElement(
+                        new LineGeometry() {
+                            StartPoint = GCTools.Dxftp(line.P1, new DxfVector(0, 0, 1)),
+                            EndPoint = GCTools.Dxftp(line.P2, new DxfVector(0, 0, 1))
+                        },
+                        entity.EntityType.ToString());
 
                 case DxfHelix dxfHelix:
                     PointCollection points = new PointCollection(GetSpiralPoints(dxfHelix, CRS));
@@ -178,8 +183,8 @@ namespace ToGeometryConverter.Format
                                             GCTools.Dxftp(arcPoint2, dxfArc.Normal),
                                         new Size(dxfArc.Radius, dxfArc.Radius),
                                         (360 + dxfArc.EndAngle - dxfArc.StartAngle) % 360,
-                                        (360 + dxfArc.EndAngle - dxfArc.StartAngle) % 360 > 180, 
-                                         SweepDirection.Counterclockwise,
+                                        (360 + dxfArc.EndAngle - dxfArc.StartAngle) % 360 > 180,
+                                         dxfArc.Normal.Z < 0 ? SweepDirection.Clockwise : SweepDirection.Counterclockwise,
                                         true));
 
                     return new GeometryElement(GCTools.FigureToGeometry(ArcContour), entity.EntityType.ToString());
