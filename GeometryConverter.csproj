@@ -10,7 +10,7 @@
     <RootNamespace>ToGeometryConverter</RootNamespace>
     <AssemblyName>ToGeometryConverter</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>10.0</LangVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>

@@ -7,7 +7,7 @@ namespace ToGeometryConverter.Format
 {
     public class MetaFile : GCFormat
     {
-        public MetaFile() : base("MetaFile", new string[2] { "wmf", "emf" }) 
+        public MetaFile() : base("MetaFile", new string[2] { ".wmf", ".emf" }) 
         {
             this.ReadFile = GetAsync;
         }

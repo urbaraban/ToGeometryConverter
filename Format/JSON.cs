@@ -10,7 +10,7 @@ namespace ToGeometryConverter.Format
 {
     public class JSON : GCFormat
     {
-        public JSON() : base("JSON", new string[1] { "json" }) 
+        public JSON() : base("JSON", new string[1] { ".json" }) 
         {
             this.ReadFile = GetAsync;
         }

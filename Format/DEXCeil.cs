@@ -10,7 +10,7 @@ namespace ToGeometryConverter.Format
 {
     public class DEXCeil : GCFormat
     {
-        public DEXCeil() : base("DEXCeil", new string[1] { "dc" }) 
+        public DEXCeil() : base("DEXCeil", new string[1] { ".dc" }) 
         {
             this.ReadFile = GetAsync;
         }

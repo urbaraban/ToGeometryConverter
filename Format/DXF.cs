@@ -17,7 +17,7 @@ namespace ToGeometryConverter.Format
 {
     public class DXF : GCFormat
     {
-        public DXF() : base("DXF", new string[1] { "dxf" }) { }
+        public DXF() : base("DXF", new string[1] { ".dxf" }) { }
 
         public override Get ReadFile => GetAsync;
 

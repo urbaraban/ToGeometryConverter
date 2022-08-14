@@ -16,7 +16,7 @@ namespace ToGeometryConverter.Format
 {
     public class SVG : GCFormat
     {
-        public SVG() : base("SVG Vector", new string[1] { "svg" }) { }
+        public SVG() : base("SVG Vector", new string[1] { ".svg" }) { }
 
         public override Get ReadFile => GetAsync;
 

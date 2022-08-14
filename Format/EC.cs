@@ -11,7 +11,7 @@ namespace ToGeometryConverter.Format
 {
     public class EC : GCFormat
     {
-        public EC() : base("EasyCeiling", new string[1] { "ec" }) { }
+        public EC() : base("EasyCeiling", new string[1] { ".ec" }) { }
 
         public Tuple<int, int> Progress { get; private set; }
 

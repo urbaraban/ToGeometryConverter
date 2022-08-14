@@ -7,7 +7,7 @@ namespace ToGeometryConverter.Format
 {
     class PDF : GCFormat
     {
-        public PDF() : base("PDF", new string[1] { "pdf" }) 
+        public PDF() : base("PDF", new string[1] { ".pdf" }) 
         {
             this.ReadFile = GetAsync;
         }

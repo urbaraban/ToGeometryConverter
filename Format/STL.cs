@@ -11,7 +11,7 @@ namespace ToGeometryConverter.Format
 {
     public class STL : GCFormat
     {
-        public STL() : base("STL", new string[1] { "stl" }) { }
+        public STL() : base("STL", new string[1] { ".stl" }) { }
 
         public override Get ReadFile => GetAsync;
 

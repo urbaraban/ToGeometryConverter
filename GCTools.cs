@@ -172,8 +172,10 @@ namespace ToGeometryConverter
                 List<PointsElement> PathPointList = new List<PointsElement>();
                 foreach (PathFigure figure in pathGeometry.Figures)
                 {
-                    PointsElement lObject = new PointsElement();
-                    lObject.IsClosed = figure.IsClosed;
+                    PointsElement lObject = new PointsElement
+                    {
+                        IsClosed = figure.IsClosed
+                    };
                     lObject.Add(new GCPoint3D(figure.StartPoint.X, figure.StartPoint.Y, 0));
 
                     Point LastPoint = figure.StartPoint;
@@ -346,8 +348,8 @@ namespace ToGeometryConverter
 
                 double StartAngle = Math.PI * 2 - Math.Atan2(StartPoint.Y - Center.Y, StartPoint.X - Center.X);
 
-                double koeff = (radius / radiusEdge) < 0.3 ? 0.3 : (radius / radiusEdge);
-                koeff = (radius / radiusEdge) > 3 ? 3 : (radius / radiusEdge);
+                //double koeff = (radius / radiusEdge) < 0.3 ? 0.3 : (radius / radiusEdge);
+                //koeff = (radius / radiusEdge) > 3 ? 3 : (radius / radiusEdge);
 
                 double RadianStep = Delta / (int)((Delta * radius) / CRS);
 
@@ -379,25 +381,24 @@ namespace ToGeometryConverter
             }
 
             return lObject;
-
-            Point GetCenterArc(Point StartPt, Point EndPt, double r, bool Clockwise, bool large)
+        }
+        private static Point GetCenterArc(Point StartPt, Point EndPt, double r, bool Clockwise, bool large)
+        {
+            double radsq = r * r;
+            double q = Math.Sqrt(Math.Pow(EndPt.X - StartPt.X, 2) + Math.Pow(EndPt.Y - StartPt.Y, 2));
+            double x3 = (StartPt.X + EndPt.X) / 2;
+            double y3 = (StartPt.Y + EndPt.Y) / 2;
+            double d1 = 0;
+            double d2 = 0;
+            if (radsq > 0)
             {
-                double radsq = r * r;
-                double q = Math.Sqrt(Math.Pow(EndPt.X - StartPt.X, 2) + Math.Pow(EndPt.Y - StartPt.Y, 2));
-                double x3 = (StartPt.X + EndPt.X) / 2;
-                double y3 = (StartPt.Y + EndPt.Y) / 2;
-                double d1 = 0;
-                double d2 = 0;
-                if (radsq > 0)
-                {
-                    d1 = Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((StartPt.Y - EndPt.Y) / q) * (large ? -1 : 1);
-                    d2 = Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((EndPt.X - StartPt.X) / q) * (large ? -1 : 1);
-                }
-                return new Point(
-                    x3 + (Clockwise ? d1 : -d1),
-                    y3 + (Clockwise ? d2 : -d2)
-                    );
+                d1 = Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((StartPt.Y - EndPt.Y) / q) * (large ? -1 : 1);
+                d2 = Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((EndPt.X - StartPt.X) / q) * (large ? -1 : 1);
             }
+            return new Point(
+                x3 + (Clockwise ? d1 : -d1),
+                y3 + (Clockwise ? d2 : -d2)
+                );
         }
 
         public static GeometryGroup GetPointsGeometries(List<PointsElement> ListPoints)
@@ -453,9 +454,9 @@ namespace ToGeometryConverter
             return Filepath.Split('\\').Last();
         }
 
-        public static GCFormat GetConverter(string Filename, ICollection<GCFormat> formats)
+        public static GCFormat GetConverter(string FullName, ICollection<GCFormat> formats)
         {
-            string InFileFormat = Filename.Split('.').Last();
+            string InFileFormat = $".{FullName.Split('.').Last()}";
 
             foreach (GCFormat format in formats)
             {
