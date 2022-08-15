@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Numerics;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -23,7 +24,7 @@ namespace ToGeometryConverter.Object
 
         public static implicit operator Geometry(NurbsShape nurbs)
         {
-            return nurbs.GetGeometry();
+            return nurbs.GetArcGeometry();
         }
 
         public NurbsShape(ObservableCollection<RationalBSplinePoint> Points, int Degree, IList<double> KnotVector, double StepSize, bool IsBspline)
@@ -49,54 +50,44 @@ namespace ToGeometryConverter.Object
             return pathGeometry;
         }
 
-        private List<Shape> GetArcGeometry()
+        private PathGeometry GetArcGeometry()
         {
-            List<Shape> shapes = new List<Shape>();
-
             PointCollection points = new PointCollection();
 
-            for (double i = 0; i < 1; i += 0.001)
+            for (double i = 0; i < 1; i += 0.01)
             {
                 points.Add(this.IsBSpline ? BSplinePoint(this._point, this._degree, this._knotvector, i) : RationalBSplinePoint(this._point, this._degree, this._knotvector, i));
             }
 
             if (points.Count > 2)
             {
-                double lastAngel = GetAngleThreePoint(points[0], points[1], points[2]);
-                PointCollection ArcCollection = new PointCollection() { points[0], points[1], points[2] };
+                PathFigure ArcFigures = new PathFigure();
+                ArcFigures.StartPoint = points[0];
                 for (int i = 3; i < points.Count; i += 1)
                 {
-                    double tempAngel = GetAngleThreePoint(points[i - 2], points[i - 1], points[i]);
+                    PointCollection ArcCollection = new PointCollection() { points[0], points[1], points[2] };
 
-                    if (tempAngel != lastAngel)
+                    double StartAngel = GetAngleThreePoint(ArcCollection[0], ArcCollection[1], ArcCollection[2]);
+                    double LastAngel = StartAngel;
+
+                    while (Math.Abs(StartAngel - LastAngel) < 5 && i < points.Count - 1)
                     {
-                        shapes.Add(GetArcShape(ArcCollection[0], ArcCollection[ArcCollection.Count / 2 + 1], ArcCollection.Last()));
-                        if (i + 2 < points.Count)
+                        LastAngel = GetAngleThreePoint(ArcCollection[ArcCollection.Count - 1], points[i], points[i + 1]);
+                        if (Math.Abs(StartAngel - LastAngel) < 5)
                         {
-                            lastAngel = GetAngleThreePoint(points[i], points[i + 1], points[i + 2]);
-                            ArcCollection = new PointCollection() { points[i], points[i + 1], points[i + 2] };
-                            i += 2;
-                        }
-                        else
-                        {
-                            ArcCollection.Clear();
+                            ArcCollection.Add(points[i]);
+                            i += 1;
                         }
                     }
-                    else
-                    {
-                        ArcCollection.Add(points[i]);
-                    }
+                    ArcFigures.Segments.Add(GetArcSegment(ArcCollection[0], ArcCollection[ArcCollection.Count / 2], ArcCollection.Last()));
                 }
-                if (ArcCollection.Count > 2)
-                {
-                    shapes.Add(GetArcShape(ArcCollection[0], ArcCollection[ArcCollection.Count / 2 + 1], ArcCollection.Last()));
-                }
+                return new PathGeometry(new List<PathFigure>() { ArcFigures });
             }
 
-            return shapes;
+            return null;
         }
 
-        private Path GetArcShape(Point start, Point middle, Point end)
+        private ArcSegment GetArcSegment(Point start, Point middle, Point end)
         {
             Point center;
             double radius = 0;
@@ -139,30 +130,16 @@ namespace ToGeometryConverter.Object
 
             double angle = GetAngleThreePoint(start, center, end);
 
-            return new Path()
-            {
-                Data = new PathGeometry()
+            return
+                new ArcSegment()
                 {
-                    Figures = new PathFigureCollection()
-                    {
-                        new PathFigure()
-                        {
-                            StartPoint = start,
-                            Segments = new PathSegmentCollection()
-                            {
-                                new ArcSegment()
-                                {
-                                    Point = end,
-                                    RotationAngle = angle,
-                                    SweepDirection = angle < 0 ? SweepDirection.Counterclockwise : SweepDirection.Clockwise,
-                                    IsLargeArc = (Math.Abs(angle) % 360) > 180,
-                                    Size = new Size(radius, radius)
-                                }
-                            }
-                        }
-                    }
-                }
-            };
+                    Point = end,
+                    RotationAngle = angle,
+                    SweepDirection = angle < 0 ? SweepDirection.Counterclockwise : SweepDirection.Clockwise,
+                    IsLargeArc = (Math.Abs(angle) % 360) > 180,
+                    Size = new Size(radius, radius)
+                };
+
 
         }
 
@@ -266,7 +243,7 @@ namespace ToGeometryConverter.Object
             return Result;
         }
 
-        private Point BSplinePoint(ObservableCollection<RationalBSplinePoint> Points, int degree, IList<double> KnotVector, double t)
+        private Point BSplinePoint(IList<RationalBSplinePoint> Points, int degree, IList<double> KnotVector, double t)
         {
             double x, y;
             x = 0;
@@ -281,7 +258,7 @@ namespace ToGeometryConverter.Object
             return new Point(x, y);
         }
 
-        private Point RationalBSplinePoint(ObservableCollection<RationalBSplinePoint> Points, int degree, IList<double> KnotVector, double t)
+        private Point RationalBSplinePoint(IList<RationalBSplinePoint> Points, int degree, IList<double> KnotVector, double t)
         {
             double x, y;
             x = 0;
@@ -356,10 +333,10 @@ namespace ToGeometryConverter.Object
 
         private double GetAngleThreePoint(Point Point1, Point Center, Point Point2)
         {
-            Vector v1 = Center - Point2;
-            Vector v2 = Point1 - Point2;
+            Vector v1 = new Vector((float)(Point1.X - Center.X), (float)(Point1.Y - Center.Y));
+            Vector v2 = new Vector((float)(Point2.X - Center.X), (float)(Point2.Y - Center.Y));
 
-            return Math.Atan2(v1.X, v1.Y) - Math.Atan2(v2.X, v2.Y);
+            return Vector.AngleBetween(v1, v2);
         }
     }
 }
