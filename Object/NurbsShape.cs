@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Vector = System.Windows.Vector;
 
 namespace ToGeometryConverter.Object
 {

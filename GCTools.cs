@@ -8,6 +8,7 @@ using System.Windows.Media;
 using ToGeometryConverter.Object.Elements;
 using System.Windows.Media.Media3D;
 using System.Numerics;
+using Vector = System.Windows.Vector;
 
 namespace ToGeometryConverter
 {
