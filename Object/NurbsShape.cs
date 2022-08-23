@@ -117,7 +117,6 @@ namespace ToGeometryConverter.Object
 
             if (!lines_intersect)
             {
-                MessageBox.Show("The points are colinear");
                 center = new Point(0, 0);
                 radius = 0;
             }
@@ -145,10 +144,10 @@ namespace ToGeometryConverter.Object
         }
 
         private void FindIntersection(
-    Point p1, Point p2, Point p3, Point p4,
-    out bool lines_intersect, out bool segments_intersect,
-    out Point intersection,
-    out Point close_p1, out Point close_p2)
+            Point p1, Point p2, Point p3, Point p4,
+            out bool lines_intersect, out bool segments_intersect,
+            out Point intersection,
+            out Point close_p1, out Point close_p2)
         {
             // Get the segments' parameters.
             double dx12 = p2.X - p1.X;
