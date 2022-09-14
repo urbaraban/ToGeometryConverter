@@ -20,11 +20,22 @@ namespace ToGeometryConverter
         public delegate void Progress(int position, int max, string message);
         public static Progress SetProgress;
 
+        /// <summary>
+        /// Drawing.PointF to Windows.Point
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
         public static Point Pftp(System.Drawing.PointF point)
         {
             return new Point(point.X, point.Y);
         }
 
+        /// <summary>
+        /// DxfPoint to Windows.Point
+        /// </summary>
+        /// <param name="point"></param>
+        /// <param name="normal"></param>
+        /// <returns></returns>
         public static Point Dxftp(DxfPoint point, DxfVector normal)
         {
             Vector3 VectorNormal = new Vector3((float)normal.X, (float)normal.Z, (float)normal.Y);

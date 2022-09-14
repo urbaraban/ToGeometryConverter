@@ -55,7 +55,7 @@ namespace ToGeometryConverter.Format
                     int index = elements.IndexOf(svgElement);
                     GCTools.SetProgress?.Invoke(index, elements.Count - 1, $"Parse SVG {index}/{elements.Count - 1}");
 
-                    if (svgElement.Visibility == "visible")
+                    if (svgElement.Visibility.ToLower() == "visible")
                     {
                         switch (svgElement)
                         {
@@ -104,10 +104,11 @@ namespace ToGeometryConverter.Format
                                     switch (path.PathData[i])
                                     {
                                         case SvgMoveToSegment svgMoveTo:
-                                            pathPath.Figures.Add(contourPath);
-                                            contourPath = new PathFigure();
-                                            contourPath.StartPoint = GCTools.Pftp(svgMoveTo.Start);
-                                            contourPath.IsClosed = true;
+                                            contourPath = new PathFigure
+                                            {
+                                                StartPoint = GCTools.Pftp(svgMoveTo.Start),
+                                                IsClosed = true
+                                            };
                                             break;
 
                                         case SvgQuadraticCurveSegment svgQuadraticCurve:
