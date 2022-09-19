@@ -36,10 +36,10 @@ namespace ToGeometryConverter
         /// <param name="point"></param>
         /// <param name="normal"></param>
         /// <returns></returns>
-        public static Point Dxftp(DxfPoint point, DxfVector normal)
+        public static Point Dxftp(DxfPoint point, DxfVector normal, DxfPoint location)
         {
             Vector3 VectorNormal = new Vector3((float)normal.X, (float)normal.Z, (float)normal.Y);
-            Vector3 VectorPoint = new Vector3((float)point.X, (float)point.Y, (float)point.Z);
+            Vector3 VectorPoint = new Vector3((float)(point.X + location.X), (float)(point.Y + location.Y), (float)(point.Z + location.Z));
             System.Numerics.Quaternion quaternion = System.Numerics.Quaternion.CreateFromAxisAngle(VectorNormal, (float)(VectorNormal.Y < 0 ? Math.PI : 0));
             Vector3 outVector = Vector3.Transform(VectorPoint, quaternion);
             return new Point

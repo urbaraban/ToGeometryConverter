@@ -53,7 +53,7 @@ namespace ToGeometryConverter.Format
 
                     foreach (DxfLayer layer in dxfLayers)
                     {
-                        elements.Add(ParseEntities(dxfFile.Entities, dxfFile.Blocks, layer.Name, CRS));
+                        elements.Add(ParseEntities(dxfFile.Entities, dxfFile.Blocks, layer.Name, dxfFile.Header.InsertionBase, CRS));
                     }
 
                     return elements;
@@ -86,61 +86,64 @@ namespace ToGeometryConverter.Format
             return dxfLayers;
         }
 
-        private GCCollection ParseEntities(IList<DxfEntity> entitys, IList<DxfBlock> blocks, string LayerName, double CRS)
+        private GCCollection ParseEntities(IList<DxfEntity> entitys, IList<DxfBlock> blocks, string LayerName, DxfPoint location, double CRS, bool insert = false)
         {
             GCCollection gccollection = new GCCollection(LayerName);
 
-            foreach (DxfEntity entity in entitys)
+            var lentity = entitys.Where(x => x.Layer == LayerName || insert == true).ToList();
+
+            for (int i = 0; i < lentity.Count; i += 1)
             {
+                GCTools.SetProgress?.Invoke(i, lentity.Count() - 1, $"Parse DXF {i}/{lentity.Count - 1}");
 
-                int index = entitys.IndexOf(entity);
-                GCTools.SetProgress?.Invoke(index, entitys.Count - 1, $"Parse DXF {index}/{entitys.Count - 1}");
-
-                if (entity.Layer == LayerName || string.IsNullOrEmpty(LayerName))
+                if (lentity[i] is DxfInsert dxfInsert)
                 {
-                    if (entity is DxfInsert dxfInsert)
+                    foreach (DxfBlock dxfBlock in blocks)
                     {
-                        foreach (DxfBlock dxfBlock in blocks)
+                        if (dxfInsert.Name == dxfBlock.Name)
                         {
-                            if (dxfInsert.Name == dxfBlock.Name)
-                            {
-                                gccollection.AddRange(ParseEntities(dxfBlock.Entities, blocks, LayerName, CRS));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        IGCObject obj = ParseObject(entity, CRS);
-                        if (obj != null) {
-                            gccollection.Add(obj);
+                            DxfPoint insert_location = new DxfPoint(
+                                location.X + dxfInsert.Location.X,
+                                location.Y + dxfInsert.Location.Y,
+                                location.Z + dxfInsert.Location.Z);
+                            gccollection.AddRange(ParseEntities(dxfBlock.Entities, blocks, LayerName, insert_location, CRS, true));
                         }
                     }
                 }
+                else
+                {
+                    IGCObject obj = ParseObject(lentity[i], CRS, location);
+                    if (obj != null)
+                    {
+                        gccollection.Add(obj);
+                    }
+                }
+
             }
             GCTools.SetProgress?.Invoke(0, 99, string.Empty);
 
             return gccollection;
         }
 
-        private static IGCObject ParseObject(DxfEntity entity, double CRS)
+        private static IGCObject ParseObject(DxfEntity entity, double CRS, DxfPoint Location)
         {
             switch (entity)
             {
                 case DxfText dxfText:
-                    Point point = GCTools.Dxftp(dxfText.Location, dxfText.Normal);
+                    Point point = GCTools.Dxftp(dxfText.Location, dxfText.Normal, Location);
                     return new TextElement(dxfText.Value, 16, new System.Windows.Media.Media3D.Point3D(point.X, point.Y, 0));
 
 
                 case DxfMText MText:
-                    Point Mpoint = GCTools.Dxftp(MText.InsertionPoint, new DxfVector(0, 0, 1));
+                    Point Mpoint = GCTools.Dxftp(MText.InsertionPoint, new DxfVector(0, 0, 1), Location);
                     return new TextElement(MText.Text, 16,
                                     new System.Windows.Media.Media3D.Point3D(Mpoint.X, Mpoint.Y, 0));
 
                 case DxfLine line:
                     return new GeometryElement(
                         new LineGeometry() {
-                            StartPoint = GCTools.Dxftp(line.P1, new DxfVector(0, 0, 1)),
-                            EndPoint = GCTools.Dxftp(line.P2, new DxfVector(0, 0, 1))
+                            StartPoint = GCTools.Dxftp(line.P1, new DxfVector(0, 0, 1), Location),
+                            EndPoint = GCTools.Dxftp(line.P2, new DxfVector(0, 0, 1), Location)
                         },
                         entity.EntityType.ToString());
 
@@ -148,7 +151,7 @@ namespace ToGeometryConverter.Format
                     PointCollection points = new PointCollection(GetSpiralPoints(dxfHelix, CRS));
                     return new GeometryElement(GCTools.FigureToGeometry(new PathFigure()
                         {
-                            StartPoint = GCTools.Dxftp(dxfHelix.AxisBasePoint, new DxfVector(0,0,1)),
+                            StartPoint = GCTools.Dxftp(dxfHelix.AxisBasePoint, new DxfVector(0,0,1), Location),
                             Segments = new PathSegmentCollection()
                             {
                                         new PolyLineSegment(points, true)
@@ -158,13 +161,13 @@ namespace ToGeometryConverter.Format
                 case DxfMLine dxfMLine:
                     PathFigure MLineFigure = new PathFigure
                     {
-                        StartPoint = GCTools.Dxftp(dxfMLine.Vertices[0], dxfMLine.Normal)
+                        StartPoint = GCTools.Dxftp(dxfMLine.Vertices[0], dxfMLine.Normal, Location)
                     };
 
                     //Идем по точкам
                     for (int i = 1; i < dxfMLine.Vertices.Count; i++)
                         MLineFigure.Segments.Add(new LineSegment(
-                            GCTools.Dxftp(dxfMLine.Vertices[i % dxfMLine.Vertices.Count], dxfMLine.Normal), true));
+                            GCTools.Dxftp(dxfMLine.Vertices[i % dxfMLine.Vertices.Count], dxfMLine.Normal, Location), true));
 
                     MLineFigure.IsClosed = MLineFigure.IsClosed;
                     return new GeometryElement(GCTools.FigureToGeometry(MLineFigure), entity.EntityType.ToString());
@@ -173,14 +176,14 @@ namespace ToGeometryConverter.Format
                 case DxfArc dxfArc:
                     PathFigure ArcContour = new PathFigure
                     {
-                        StartPoint = GCTools.Dxftp(dxfArc.GetPointFromAngle(dxfArc.StartAngle), dxfArc.Normal)
+                        StartPoint = GCTools.Dxftp(dxfArc.GetPointFromAngle(dxfArc.StartAngle), dxfArc.Normal, Location)
                     };
 
                     DxfPoint arcPoint2 = dxfArc.GetPointFromAngle(dxfArc.EndAngle);
 
                     ArcContour.Segments.Add(
                                         new ArcSegment(
-                                            GCTools.Dxftp(arcPoint2, dxfArc.Normal),
+                                            GCTools.Dxftp(arcPoint2, dxfArc.Normal, Location),
                                         new Size(dxfArc.Radius, dxfArc.Radius),
                                         (360 + dxfArc.EndAngle - dxfArc.StartAngle) % 360,
                                         (360 + dxfArc.EndAngle - dxfArc.StartAngle) % 360 > 180,
@@ -192,14 +195,14 @@ namespace ToGeometryConverter.Format
                 case DxfCircle dxfCircle:
                     return new GeometryElement(
                         new EllipseGeometry(
-                            GCTools.Dxftp(dxfCircle.Center, dxfCircle.Normal), 
+                            GCTools.Dxftp(dxfCircle.Center, dxfCircle.Normal, Location), 
                             dxfCircle.Radius * 2, 
                             dxfCircle.Radius * 2), entity.EntityType.ToString());
 
                 case DxfEllipse dxfEllipse:
                     double MajorAngle = (Math.PI * 2 - Math.Atan((dxfEllipse.MajorAxis.Y) / (dxfEllipse.MajorAxis.X))) % (2 * Math.PI);
                     return new GeometryElement(
-                        new EllipseGeometry(GCTools.Dxftp(dxfEllipse.Center, dxfEllipse.Normal),
+                        new EllipseGeometry(GCTools.Dxftp(dxfEllipse.Center, dxfEllipse.Normal, Location),
                         dxfEllipse.MajorAxis.Length,
                         dxfEllipse.MajorAxis.Length * dxfEllipse.MinorAxisRatio,
                         new RotateTransform(MajorAngle * 180 / Math.PI)), entity.EntityType.ToString());
@@ -242,11 +245,11 @@ namespace ToGeometryConverter.Format
 
                 case DxfPolyline dxfPolyline:
                     PathFigure polyLineFigure = new PathFigure();
-                    polyLineFigure.StartPoint = GCTools.Dxftp(dxfPolyline.Vertices[0].Location, dxfPolyline.Normal);
+                    polyLineFigure.StartPoint = GCTools.Dxftp(dxfPolyline.Vertices[0].Location, dxfPolyline.Normal, Location);
 
                     for (int i = 1; i < dxfPolyline.Vertices.Count; i++)
                     {
-                        polyLineFigure.Segments.Add(new LineSegment(GCTools.Dxftp(dxfPolyline.Vertices[i].Location, dxfPolyline.Normal), true));
+                        polyLineFigure.Segments.Add(new LineSegment(GCTools.Dxftp(dxfPolyline.Vertices[i].Location, dxfPolyline.Normal, Location), true));
                     }
 
                     polyLineFigure.IsClosed = dxfPolyline.IsClosed;
@@ -259,7 +262,7 @@ namespace ToGeometryConverter.Format
 
                     foreach (DxfControlPoint controlPoint in dxfSpline.ControlPoints)
                     {
-                        rationalBSplinePoints.Add(new RationalBSplinePoint(GCTools.Dxftp(controlPoint.Point, dxfSpline.Normal), controlPoint.Weight));
+                        rationalBSplinePoints.Add(new RationalBSplinePoint(GCTools.Dxftp(controlPoint.Point, dxfSpline.Normal, Location), controlPoint.Weight));
                     }
                     return new GeometryElement(new NurbsShape(rationalBSplinePoints, dxfSpline.DegreeOfCurve, dxfSpline.KnotValues, CRS, dxfSpline.IsRational == true), entity.EntityType.ToString());
 
