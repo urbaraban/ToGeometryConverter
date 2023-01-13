@@ -12,6 +12,9 @@ namespace ToGeometryConverter.Object.Elements
 
         public bool IsClosed { get; set; }
 
+        public Rect Bounds => this.bounds;
+        private Rect bounds;
+
         public GeometryElement(Geometry geometry, string Name)
         {
             MyGeometry = geometry;
@@ -27,10 +30,9 @@ namespace ToGeometryConverter.Object.Elements
 
         public Geometry GetGeometry(Transform3D Transform, double RoundStep, double RoundEdge)
         {
-           return GCTools.GetPointsGeometries(this.GetPointCollection(Transform, RoundStep, RoundEdge));
+            return GCTools.GetPointsGeometries(this.GetPointCollection(Transform, RoundStep, RoundEdge));
         }
 
-        public Rect Bounds => this.bounds;
-        private Rect bounds;
+        public string ToString() => MyGeometry.ToString();
     }
 }

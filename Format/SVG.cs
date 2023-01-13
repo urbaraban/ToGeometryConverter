@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using ToGeometryConverter.Object;
 using ToGeometryConverter.Object.Elements;
 using Point = System.Windows.Point;
@@ -22,12 +23,14 @@ namespace ToGeometryConverter.Format
 
         private async Task<object> GetAsync(string filepath, double RoundStep)
         {
-            return await Task<object>.Run(() => {
+            return await Task<object>.Run(() =>
+            {
                 if (File.Exists(filepath) == true)
                 {
                     SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
                     GCTools.Log?.Invoke($"Load {this.Name} file: {filepath}", "GCTool");
-                    return SwitchCollection(svgDoc.Children, GCTools.GetName(filepath));
+                    GCCollection retcollection = SwitchCollection(svgDoc.Children, GCTools.GetName(filepath));
+                    return retcollection;
                 }
                 return null;
             });
@@ -44,7 +47,7 @@ namespace ToGeometryConverter.Format
             });
         }
 
-       private GCCollection SwitchCollection(SvgElementCollection elements, string Name)
+        private GCCollection SwitchCollection(SvgElementCollection elements, string Name)
         {
             GCCollection gccollection = new GCCollection(Name);
             GCTools.SetProgress?.Invoke(0, elements.Count, "Parse SVG");
@@ -96,61 +99,8 @@ namespace ToGeometryConverter.Format
                                 break;
 
                             case SvgPath path:
-                                PathGeometry pathPath = new PathGeometry();
-                                PathFigure contourPath = new PathFigure();
-                                contourPath.IsClosed = contourPath.IsClosed;
-                                for (int i = 0; i < path.PathData.Count; i++)
-                                {
-                                    switch (path.PathData[i])
-                                    {
-                                        case SvgMoveToSegment svgMoveTo:
-                                            contourPath = new PathFigure
-                                            {
-                                                StartPoint = GCTools.Pftp(svgMoveTo.Start),
-                                                IsClosed = true
-                                            };
-                                            break;
-
-                                        case SvgQuadraticCurveSegment svgQuadraticCurve:
-                                            PolyQuadraticBezierSegment polyQuadraticBezierSegment = new PolyQuadraticBezierSegment();
-
-                                            polyQuadraticBezierSegment.Points.Add(GCTools.Pftp(svgQuadraticCurve.ControlPoint));
-                                            polyQuadraticBezierSegment.Points.Add(GCTools.Pftp(svgQuadraticCurve.End));
-
-                                            contourPath.Segments.Add(polyQuadraticBezierSegment);
-
-                                            break;
-
-                                        case SvgArcSegment svgArcSeg:
-                                            contourPath.Segments.Add(
-                                                new ArcSegment(
-                                                     GCTools.Pftp(svgArcSeg.End),
-                                                new Size(svgArcSeg.RadiusX, svgArcSeg.RadiusY), svgArcSeg.Angle, false,
-                                                svgArcSeg.Sweep == Svg.Pathing.SvgArcSweep.Positive ? SweepDirection.Clockwise : SweepDirection.Counterclockwise,
-                                                true));
-                                            break;
-
-                                        case SvgLineSegment svgLineSegment:
-                                            contourPath.Segments.Add(new LineSegment(GCTools.Pftp(svgLineSegment.End), true));
-                                            break;
-
-                                        case SvgCubicCurveSegment svgCubicCurve:
-                                            contourPath.Segments.Add(new BezierSegment(
-                                                 GCTools.Pftp(svgCubicCurve.FirstControlPoint),
-                                               GCTools.Pftp(svgCubicCurve.SecondControlPoint),
-                                              GCTools.Pftp(svgCubicCurve.End), true));
-                                            break;
-
-                                        case SvgClosePathSegment segment:
-                                            pathPath.Figures.Add(contourPath);
-                                            break;
-                                        default:
-                                            break;
-                                    }
-                                }
-                                if (!pathPath.Figures.Equals(contourPath))
-                                    pathPath.Figures.Add(contourPath);
-                                gccollection.Add(new GeometryElement(pathPath, svgElement.ID));
+                                PathGeometry pathGeometry = ParseSvgPath(path);
+                                gccollection.Add(new GeometryElement(pathGeometry, svgElement.ID));
                                 break;
 
                             case SvgGroup group:
@@ -169,7 +119,61 @@ namespace ToGeometryConverter.Format
             return gccollection;
         }
 
+        private static PathGeometry ParseSvgPath(SvgPath path)
+        {
+            PathGeometry pathGeometry = new PathGeometry();
+            PathFigure pathFigure = new PathFigure();
+            for (int i = 0; i < path.PathData.Count; i++)
+            {
+                switch (path.PathData[i])
+                {
+                    case SvgMoveToSegment svgMoveTo:
+                        pathFigure = new PathFigure
+                        {
+                            StartPoint = GCTools.Pftp(svgMoveTo.Start),
+                            IsClosed = true
+                        };
+                        break;
 
+                    case SvgQuadraticCurveSegment svgQuadraticCurve:
+                        PolyQuadraticBezierSegment polyQuadraticBezierSegment = new PolyQuadraticBezierSegment();
+
+                        polyQuadraticBezierSegment.Points.Add(GCTools.Pftp(svgQuadraticCurve.ControlPoint));
+                        polyQuadraticBezierSegment.Points.Add(GCTools.Pftp(svgQuadraticCurve.End));
+
+                        pathFigure.Segments.Add(polyQuadraticBezierSegment);
+                        break;
+
+                    case SvgArcSegment svgArcSeg:
+                        pathFigure.Segments.Add(
+                            new ArcSegment(
+                                 GCTools.Pftp(svgArcSeg.End),
+                            new Size(svgArcSeg.RadiusX, svgArcSeg.RadiusY), svgArcSeg.Angle, false,
+                            svgArcSeg.Sweep == Svg.Pathing.SvgArcSweep.Positive ? SweepDirection.Clockwise : SweepDirection.Counterclockwise,
+                            true));
+                        break;
+
+                    case SvgLineSegment svgLineSegment:
+                        pathFigure.Segments.Add(new LineSegment(GCTools.Pftp(svgLineSegment.End), true));
+                        break;
+
+                    case SvgCubicCurveSegment svgCubicCurve:
+                        pathFigure.Segments.Add(new BezierSegment(
+                             GCTools.Pftp(svgCubicCurve.FirstControlPoint),
+                           GCTools.Pftp(svgCubicCurve.SecondControlPoint),
+                          GCTools.Pftp(svgCubicCurve.End), true));
+                        break;
+
+                    case SvgClosePathSegment segment:
+                        pathGeometry.Figures.Add(pathFigure);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            return pathGeometry;
+        }
 
     }
 }
