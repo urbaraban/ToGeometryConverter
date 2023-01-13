@@ -261,10 +261,12 @@ namespace ToGeometryConverter.Format
                     ObservableCollection<RationalBSplinePoint> rationalBSplinePoints = new ObservableCollection<RationalBSplinePoint>();
 
                     foreach (DxfControlPoint controlPoint in dxfSpline.ControlPoints)
-                    {
-                        rationalBSplinePoints.Add(new RationalBSplinePoint(GCTools.Dxftp(controlPoint.Point, dxfSpline.Normal, Location), controlPoint.Weight));
+                    { 
+                        Point point1 = GCTools.Dxftp(controlPoint.Point, dxfSpline.Normal, Location);
+                        rationalBSplinePoints.Add(new RationalBSplinePoint(point1.X, point1.Y, controlPoint.Weight));
                     }
-                    return new GeometryElement(new NurbsShape(rationalBSplinePoints, dxfSpline.DegreeOfCurve, dxfSpline.KnotValues, CRS, dxfSpline.IsRational == true), entity.EntityType.ToString());
+                    NurbsShape nurbsShape = new NurbsShape(rationalBSplinePoints, dxfSpline.DegreeOfCurve, dxfSpline.KnotValues, dxfSpline.IsRational == true);
+                    return new GeometryElement(nurbsShape, entity.EntityType.ToString());
 
                 default:
                     return null;

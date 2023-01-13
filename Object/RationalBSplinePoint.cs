@@ -4,34 +4,28 @@ namespace ToGeometryConverter.Object
 {
     public class RationalBSplinePoint
     {
-
-        public RationalBSplinePoint(Point myPoint, double weight)
-        {
-            MyPoint = myPoint;
-            Weight = weight;
-        }
-
-        private Point pMyPoint = new Point();
-
-        public Point MyPoint
-        {
-            get { return pMyPoint; }
-            set
-            {
-                this.pMyPoint = value;
-            }
-        }
-
-        private double pWeight = 1d;
+        public double X { get; set; }
+        public double Y { get; set; }
 
         public double Weight
         {
-            get { return pWeight; }
+            get => _pweight;
             set
             {
-                this.pWeight = value;
+                _pweight = value;
             }
         }
+        private double _pweight = 1d;
 
+        public Point GetPoint => new Point(X, Y);
+
+        public RationalBSplinePoint(double X, double Y, double weight)
+        {
+            this.X = X;
+            this.Y = Y;
+            this.Weight = weight;
+        }
+
+        public override string ToString() => $"X:{X}; Y:{Y}";
     }
 }

@@ -3,10 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Numerics;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using Vector = System.Windows.Vector;
 
 namespace ToGeometryConverter.Object
@@ -17,10 +15,9 @@ namespace ToGeometryConverter.Object
         public bool IsBSpline { get; set; }
 
         // private PathGeometry pathGeometry;
-        private ObservableCollection<RationalBSplinePoint> _point;
+        private readonly ObservableCollection<RationalBSplinePoint> _point;
         private int _degree;
-        private IList<double> _knotvector;
-        private double _stepsize;
+        private readonly IList<double> _knotvector;
 
 
         public static implicit operator Geometry(NurbsShape nurbs)
@@ -28,27 +25,12 @@ namespace ToGeometryConverter.Object
             return nurbs.GetArcGeometry();
         }
 
-        public NurbsShape(ObservableCollection<RationalBSplinePoint> Points, int Degree, IList<double> KnotVector, double StepSize, bool IsBspline)
+        public NurbsShape(ObservableCollection<RationalBSplinePoint> Points, int Degree, IList<double> KnotVector, bool IsBspline)
         {
             this._point = Points;
             this._degree = Degree;
             this._knotvector = KnotVector;
-            this._stepsize = StepSize;
             this.IsBSpline = IsBspline;
-        }
-
-        private Geometry GetGeometry()
-        {
-            PointCollection points = BSplinePoints(this._stepsize);
-
-            PathFigure pathFigure = new PathFigure();
-            pathFigure.StartPoint = points.First();
-            points.Remove(points.First());
-            pathFigure.Segments.Add(new PolyLineSegment(points, true));
-
-            PathGeometry pathGeometry = new PathGeometry();
-            pathGeometry.Figures.Add(pathFigure);
-            return pathGeometry;
         }
 
         private PathGeometry GetArcGeometry()
@@ -57,32 +39,49 @@ namespace ToGeometryConverter.Object
 
             for (double i = 0; i < 1; i += 0.01)
             {
-                points.Add(this.IsBSpline ? BSplinePoint(this._point, this._degree, this._knotvector, i) : RationalBSplinePoint(this._point, this._degree, this._knotvector, i));
+                if (this.IsBSpline == true)
+                    points.Add(BSplinePoint(this._point, this._degree, this._knotvector, i));
+                else
+                    points.Add(RationalBSplinePoint(this._point, this._degree, this._knotvector, i));
             }
 
             if (points.Count > 2)
             {
                 PathFigure ArcFigures = new PathFigure();
                 ArcFigures.StartPoint = points[0];
-                for (int i = 3; i < points.Count; i += 1)
+                for (int i = 2; i < points.Count; i += 2)
                 {
-                    PointCollection ArcCollection = new PointCollection() { points[0], points[1], points[2] };
+                    PointCollection ArcCollection = new PointCollection() {
+                            points[i - 2],
+                            points[i - 1],
+                            points[i]
+                    };
 
-                    double StartAngel = GetAngleThreePoint(ArcCollection[0], ArcCollection[1], ArcCollection[2]);
+                    double StartAngel = GetAngleThreePoint(
+                            points[i - 2],
+                            points[i - 1],
+                            points[i]);
                     double LastAngel = StartAngel;
 
                     while (Math.Abs(StartAngel - LastAngel) < 5 && i < points.Count - 1)
                     {
-                        LastAngel = GetAngleThreePoint(ArcCollection[ArcCollection.Count - 1], points[i], points[i + 1]);
+                        i += 1;
+
+                        LastAngel = GetAngleThreePoint(
+                            points[i - 2],
+                            points[i - 1],
+                            points[i]);
+
                         if (Math.Abs(StartAngel - LastAngel) < 5)
                         {
                             ArcCollection.Add(points[i]);
-                            i += 1;
                         }
                     }
-                    ArcFigures.Segments.Add(GetArcSegment(ArcCollection[0], ArcCollection[ArcCollection.Count / 2], ArcCollection.Last()));
+                    ArcSegment segment = GetArcSegment(ArcCollection[0], ArcCollection[ArcCollection.Count / 2], ArcCollection.Last());
+                    ArcFigures.Segments.Add(segment);
                 }
-                return new PathGeometry(new List<PathFigure>() { ArcFigures });
+                PathGeometry pathGeometry = new PathGeometry(new List<PathFigure>() { ArcFigures });
+                return pathGeometry;
             }
 
             return null;
@@ -218,11 +217,15 @@ namespace ToGeometryConverter.Object
             for (double i = 0; i < 1; i += 0.01)
             {
                 Point temppoint = this.IsBSpline ? BSplinePoint(this._point, this._degree, this._knotvector, i) : RationalBSplinePoint(this._point, this._degree, this._knotvector, i);
-                lenth += Math.Sqrt(Math.Pow(temppoint.X - lastpoint.X, 2) + Math.Pow(temppoint.Y - lastpoint.Y, 2));
+                lenth += Math.Sqrt(
+                    Math.Pow(temppoint.X - lastpoint.X, 2) + 
+                    Math.Pow(temppoint.Y - lastpoint.Y, 2));
                 lastpoint = temppoint;
             }
 
-            lenth += Math.Sqrt(Math.Pow(this._point[this._point.Count - 1].MyPoint.X - lastpoint.X, 2) + Math.Pow(this._point[this._point.Count - 1].MyPoint.Y - lastpoint.Y, 2));
+            lenth += Math.Sqrt(
+                Math.Pow(this._point[this._point.Count - 1].X - lastpoint.X, 2) +
+                Math.Pow(this._point[this._point.Count - 1].Y - lastpoint.Y, 2));
 
             step = step / lenth;
 
@@ -237,8 +240,8 @@ namespace ToGeometryConverter.Object
                     Result.Add(RationalBSplinePoint(this._point, this._degree, this._knotvector, i));
             }
 
-            if (!Result.Contains(this._point[this._point.Count - 1].MyPoint))
-                Result.Add(this._point[this._point.Count - 1].MyPoint);
+            if (!Result.Contains(this._point[this._point.Count - 1].GetPoint))
+                Result.Add(this._point[this._point.Count - 1].GetPoint);
 
             return Result;
         }
@@ -251,8 +254,8 @@ namespace ToGeometryConverter.Object
             for (int i = 0; i < Points.Count; i++)
             {
                 double NIP = Nip(i, degree, KnotVector, t);
-                x += Points[i].MyPoint.X * NIP;
-                y += Points[i].MyPoint.Y * NIP;
+                x += Points[i].X * NIP;
+                y += Points[i].Y * NIP;
             }
 
             return new Point(x, y);
@@ -274,8 +277,8 @@ namespace ToGeometryConverter.Object
             for (int i = 0; i < Points.Count; i++)
             {
                 double NIP = Nip(i, degree, KnotVector, t);
-                x += Points[i].MyPoint.X * Points[i].Weight * NIP / rationalWeight;
-                y += Points[i].MyPoint.Y * Points[i].Weight * NIP / rationalWeight;
+                x += Points[i].X * Points[i].Weight * NIP / rationalWeight;
+                y += Points[i].Y * Points[i].Weight * NIP / rationalWeight;
             }
             return new Point(x, y);
         }
