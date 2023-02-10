@@ -50,12 +50,15 @@ namespace ToGeometryConverter.Format
                     {
                         dxfLayers = GetEntityLayer(dxfFile.Entities);
                     }
-
                     foreach (DxfLayer layer in dxfLayers)
                     {
-                        elements.Add(ParseEntities(dxfFile.Entities, dxfFile.Blocks, layer.Name, dxfFile.Header.InsertionBase, CRS));
-                    }
+                        GCCollection layercollect = ParseEntities(dxfFile.Entities, dxfFile.Blocks, layer.Name, dxfFile.Header.InsertionBase, CRS);
+                        if (layercollect.Count > 0)
+                        {
+                            elements.Add(layercollect);
+                        }
 
+                    }
                     return elements;
                 });
             }

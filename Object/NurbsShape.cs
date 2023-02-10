@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Numerics;
 using System.Windows;
 using System.Windows.Media;
 using Vector = System.Windows.Vector;
@@ -45,48 +46,52 @@ namespace ToGeometryConverter.Object
                     points.Add(RationalBSplinePoint(this._point, this._degree, this._knotvector, i));
             }
 
-            if (points.Count > 2)
+            PathGeometry pathGeometry = null;
+            PathFigure Figures = new PathFigure();
+            if (points.Count == 2)
             {
-                PathFigure ArcFigures = new PathFigure();
-                ArcFigures.StartPoint = points[0];
+                Figures.StartPoint = points[0];
+                Figures.Segments.Add(new LineSegment(points[1], true));
+            }
+            else if (points.Count > 2)
+            {
+                Figures.StartPoint = points[0];
+
                 for (int i = 2; i < points.Count; i += 2)
                 {
                     PointCollection ArcCollection = new PointCollection() {
                             points[i - 2],
                             points[i - 1],
-                            points[i]
                     };
+                    double StartAngel = Math.Abs(GetAngleThreePoint(points[i - 2], points[i - 1], points[i]));
+                    double AlreadyAngel = StartAngel;
 
-                    double StartAngel = GetAngleThreePoint(
-                            points[i - 2],
-                            points[i - 1],
-                            points[i]);
-                    double LastAngel = StartAngel;
-
-                    while (Math.Abs(StartAngel - LastAngel) < 5 && i < points.Count - 1)
+                    while (Math.Abs(StartAngel - AlreadyAngel) < 5 && i < points.Count - 1)
                     {
+                        ArcCollection.Add(points[i]);
                         i += 1;
-
-                        LastAngel = GetAngleThreePoint(
-                            points[i - 2],
-                            points[i - 1],
-                            points[i]);
-
-                        if (Math.Abs(StartAngel - LastAngel) < 5)
-                        {
-                            ArcCollection.Add(points[i]);
-                        }
+                        AlreadyAngel = Math.Abs(GetAngleThreePoint(points[i - 2], points[i - 1], points[i]));
                     }
                     ArcSegment segment = GetArcSegment(ArcCollection[0], ArcCollection[ArcCollection.Count / 2], ArcCollection.Last());
-                    ArcFigures.Segments.Add(segment);
+                    Figures.Segments.Add(segment);
                 }
-                PathGeometry pathGeometry = new PathGeometry(new List<PathFigure>() { ArcFigures });
-                return pathGeometry;
             }
 
-            return null;
+            if (Figures.Segments.Count > 0)
+            {
+                pathGeometry = new PathGeometry(new List<PathFigure>() { Figures });
+            }
+
+            return pathGeometry;
         }
 
+        /// <summary>
+        /// Рассчитывает дугу по трем точкам
+        /// </summary>
+        /// <param name="start">Начало дуги</param>
+        /// <param name="middle">Апекс</param>
+        /// <param name="end">Конец</param>
+        /// <returns></returns>
         private ArcSegment GetArcSegment(Point start, Point middle, Point end)
         {
             Point center;
@@ -138,8 +143,6 @@ namespace ToGeometryConverter.Object
                     IsLargeArc = (Math.Abs(angle) % 360) > 180,
                     Size = new Size(radius, radius)
                 };
-
-
         }
 
         private void FindIntersection(
@@ -268,13 +271,13 @@ namespace ToGeometryConverter.Object
             y = 0;
             double rationalWeight = 0d;
 
-            for (int i = 0; i < Points.Count; i++)
+            for (int i = 0; i < Points.Count; i += 1)
             {
                 double NIP = Nip(i, degree, KnotVector, t) * Points[i].Weight;
                 rationalWeight += NIP;
             }
 
-            for (int i = 0; i < Points.Count; i++)
+            for (int i = 0; i < Points.Count; i += 1)
             {
                 double NIP = Nip(i, degree, KnotVector, t);
                 x += Points[i].X * Points[i].Weight * NIP / rationalWeight;
@@ -333,7 +336,13 @@ namespace ToGeometryConverter.Object
             return N[0];
         }
 
-
+        /// <summary>
+        /// Возвращает угол между тремя точками в градусах
+        /// </summary>
+        /// <param name="Point1">Начальная</param>
+        /// <param name="Center">Центральная</param>
+        /// <param name="Point2">Конечная</param>
+        /// <returns></returns>
         private double GetAngleThreePoint(Point Point1, Point Center, Point Point2)
         {
             Vector v1 = new Vector((float)(Point1.X - Center.X), (float)(Point1.Y - Center.Y));
