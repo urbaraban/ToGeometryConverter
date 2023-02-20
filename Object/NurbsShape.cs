@@ -45,6 +45,7 @@ namespace ToGeometryConverter.Object
                 else
                     points.Add(RationalBSplinePoint(this._point, this._degree, this._knotvector, i));
             }
+            points.Add(new Point(this._point.Last().X, this._point.Last().Y));
 
             PathGeometry pathGeometry = null;
             PathFigure Figures = new PathFigure();
@@ -66,13 +67,17 @@ namespace ToGeometryConverter.Object
                     double StartAngel = Math.Abs(GetAngleThreePoint(points[i - 2], points[i - 1], points[i]));
                     double AlreadyAngel = StartAngel;
 
-                    while (Math.Abs(StartAngel - AlreadyAngel) < 5 && i < points.Count - 1)
+                    while (Math.Abs(StartAngel - AlreadyAngel) < 5 && i < points.Count)
                     {
                         ArcCollection.Add(points[i]);
                         i += 1;
-                        AlreadyAngel = Math.Abs(GetAngleThreePoint(points[i - 2], points[i - 1], points[i]));
+                        if (i < points.Count)
+                            AlreadyAngel = Math.Abs(GetAngleThreePoint(points[i - 2], points[i - 1], points[i]));
+                        else
+                            AlreadyAngel = StartAngel + 10;
                     }
-                    ArcSegment segment = GetArcSegment(ArcCollection[0], ArcCollection[ArcCollection.Count / 2], ArcCollection.Last());
+                    Point last = ArcCollection.Last();
+                    ArcSegment segment = GetArcSegment(ArcCollection[0], ArcCollection[ArcCollection.Count / 2], last);
                     Figures.Segments.Add(segment);
                 }
             }
@@ -210,45 +215,6 @@ namespace ToGeometryConverter.Object
             close_p2 = new Point(p3.X + dx34 * t2, p3.Y + dy34 * t2);
         }
 
-
-        public PointCollection BSplinePoints(double step)
-        {
-            //lenth
-            double lenth = 0;
-            Point lastpoint = this.IsBSpline ? BSplinePoint(this._point, this._degree, this._knotvector, 0) : RationalBSplinePoint(this._point, this._degree, this._knotvector, 0);
-
-            for (double i = 0; i < 1; i += 0.01)
-            {
-                Point temppoint = this.IsBSpline ? BSplinePoint(this._point, this._degree, this._knotvector, i) : RationalBSplinePoint(this._point, this._degree, this._knotvector, i);
-                lenth += Math.Sqrt(
-                    Math.Pow(temppoint.X - lastpoint.X, 2) + 
-                    Math.Pow(temppoint.Y - lastpoint.Y, 2));
-                lastpoint = temppoint;
-            }
-
-            lenth += Math.Sqrt(
-                Math.Pow(this._point[this._point.Count - 1].X - lastpoint.X, 2) +
-                Math.Pow(this._point[this._point.Count - 1].Y - lastpoint.Y, 2));
-
-            step = step / lenth;
-
-            //calculate
-            PointCollection Result = new PointCollection();
-
-            for (double i = 0; i < 1; i += step)
-            {
-                if (this.IsBSpline)
-                    Result.Add(BSplinePoint(this._point, this._degree, this._knotvector, i));
-                else
-                    Result.Add(RationalBSplinePoint(this._point, this._degree, this._knotvector, i));
-            }
-
-            if (!Result.Contains(this._point[this._point.Count - 1].GetPoint))
-                Result.Add(this._point[this._point.Count - 1].GetPoint);
-
-            return Result;
-        }
-
         private Point BSplinePoint(IList<RationalBSplinePoint> Points, int degree, IList<double> KnotVector, double t)
         {
             double x, y;
@@ -283,6 +249,7 @@ namespace ToGeometryConverter.Object
                 x += Points[i].X * Points[i].Weight * NIP / rationalWeight;
                 y += Points[i].Y * Points[i].Weight * NIP / rationalWeight;
             }
+
             return new Point(x, y);
         }
 
@@ -300,22 +267,23 @@ namespace ToGeometryConverter.Object
             if (step < Knot[PointIndex] || step >= Knot[PointIndex + degree + 1])
                 return 0;
 
-            for (int j = 0; j <= degree; j++)
+            for (int j = 0; j <= degree; j += 1)
             {
-                if (step >= Knot[PointIndex + j] && step < Knot[PointIndex + j + 1])
+                double round = Math.Round(step, 6);
+                if (step >= Knot[PointIndex + j] && round < Knot[PointIndex + j + 1])
                     N[j] = 1d;
                 else
                     N[j] = 0d;
             }
 
-            for (int k = 1; k <= degree; k++)
+            for (int k = 1; k <= degree; k += 1)
             {
                 if (N[0] == 0)
                     saved = 0d;
                 else
                     saved = ((step - Knot[PointIndex]) * N[0]) / (Knot[PointIndex + k] - Knot[PointIndex]);
 
-                for (int j = 0; j < degree - k + 1; j++)
+                for (int j = 0; j < degree - k + 1; j += 1)
                 {
                     double Uleft = Knot[PointIndex + j + 1];
                     double Uright = Knot[PointIndex + j + k + 1];
