@@ -129,8 +129,6 @@
     <Compile Include="Format\GCODE.cs" />
     <Compile Include="GCFormat.cs" />
     <Compile Include="Format\JSON.cs" />
-    <Compile Include="Format\MetaFile.cs" />
-    <Compile Include="Format\PDF.cs" />
     <Compile Include="Format\STL.cs" />
     <Compile Include="Object\Elements\GCPoint3D.cs" />
     <Compile Include="Object\GCCollection.cs" />
