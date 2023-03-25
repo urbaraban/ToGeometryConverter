@@ -27,10 +27,5 @@ namespace ToGeometryConverter.Object.Elements
             this.Z = Z;
             this.Multiplier = 0;
         }
-
-        internal static GCPoint3D Parse(Edge edge)
-        {
-            return new GCPoint3D(edge.v1.X, edge.v1.Y, edge.v1.Z);
-        }
     }
 }
