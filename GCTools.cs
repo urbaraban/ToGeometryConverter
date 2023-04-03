@@ -102,12 +102,13 @@ namespace ToGeometryConverter
             };
         }
 
-        internal static PathSegment GetArcSegmentFromList(List<Point> tesselatePoints)
+        public static PathSegment GetArcSegmentFromList(IEnumerable<Point> tesselatePoints)
         {
-            Point A = tesselatePoints[0];
-            Point B = tesselatePoints[tesselatePoints.Count / 2];
-            Point C = tesselatePoints.Last();
+            PathSegment Result = null;
 
+            Point A = tesselatePoints.ElementAt(0);
+            Point B = tesselatePoints.ElementAt(tesselatePoints.Count() / 2);
+            Point C = tesselatePoints.Last();
 
             double offset = Math.Pow(B.X, 2) + Math.Pow(B.Y, 2);
             double bc = (Math.Pow(A.X, 2) + Math.Pow(A.Y, 2) - offset) / 2.0;
@@ -120,15 +121,29 @@ namespace ToGeometryConverter
 
             double radius = Math.Sqrt(Math.Pow(B.X - Center.X, 2) + Math.Pow(B.Y - Center.Y, 2));
 
-            bool isLarge = Math.Abs(GCTools.GetAngleThreePoint(A, Center, C)) < Math.Abs((GCTools.GetAngleThreePoint(B, Center, C) + GCTools.GetAngleThreePoint(A, Center, B)));
+            double angle = GCTools.GetAngleThreePoint(A, Center, C);
 
-            SweepDirection sweepDirection = (GCTools.GetAngleThreePoint(A, Center, C) < 0 && isLarge == false) ? SweepDirection.Counterclockwise : SweepDirection.Clockwise;
+            if (double.IsNaN(angle) == false &&
+                double.IsInfinity(angle) == false &&
+                Math.Abs(angle) > 1)
+            {
+                double AngleAB = GCTools.GetAngleThreePoint(A, Center, B);
+                double AngleBC = GCTools.GetAngleThreePoint(B, Center, C);
+                bool isLarge = angle > Math.Abs(AngleBC + AngleAB);
 
-            double rotationAngle = Math.Abs(Math.Abs(GCTools.GetAngleThreePoint(A, Center, C) % 360) - (sweepDirection == SweepDirection.Counterclockwise ? 0 : 360));
+                double ACtrC = GCTools.GetAngleThreePoint(A, Center, C);
+                SweepDirection sweepDirection = SweepDirection.Clockwise;
+                if (ACtrC < 0 && isLarge == false)
+                {
+                    sweepDirection = SweepDirection.Counterclockwise;
+                }
+                double rotationAngle = Math.Abs(Math.Abs(ACtrC % 360) - (sweepDirection == SweepDirection.Counterclockwise ? 0 : 360));
 
-            return new ArcSegment(C, new Size(radius, radius), rotationAngle,
-                isLarge, sweepDirection, true);
+                Result = new ArcSegment(C, new Size(radius, radius), rotationAngle,
+                    isLarge, sweepDirection, true);
+            }
 
+            return Result;
         }
 
 
