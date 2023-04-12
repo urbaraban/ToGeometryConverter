@@ -125,22 +125,27 @@ namespace ToGeometryConverter
 
             if (double.IsNaN(angle) == false &&
                 double.IsInfinity(angle) == false &&
-                Math.Abs(angle) > 1)
+                Math.Abs(angle) > 2)
             {
                 double AngleAB = GCTools.GetAngleThreePoint(A, Center, B);
                 double AngleBC = GCTools.GetAngleThreePoint(B, Center, C);
-                bool isLarge = angle > Math.Abs(AngleBC + AngleAB);
+                double sum = Math.Abs(AngleBC + AngleAB);
+                bool isLarge = (Math.Abs(sum) - Math.Abs(angle)) > 0.000001;
 
-                double ACtrC = GCTools.GetAngleThreePoint(A, Center, C);
                 SweepDirection sweepDirection = SweepDirection.Clockwise;
-                if (ACtrC < 0 && isLarge == false)
+                if (angle < 0)
                 {
                     sweepDirection = SweepDirection.Counterclockwise;
                 }
-                double rotationAngle = Math.Abs(Math.Abs(ACtrC % 360) - (sweepDirection == SweepDirection.Counterclockwise ? 0 : 360));
-
-                Result = new ArcSegment(C, new Size(radius, radius), rotationAngle,
+                double rotationAngle = angle;
+                if (isLarge == true)
+                {
+                    rotationAngle = sum;
+                }
+                ArcSegment arcSegment = new ArcSegment(C, new Size(radius, radius), rotationAngle,
                     isLarge, sweepDirection, true);
+                Result = arcSegment;
+                Console.WriteLine($"{angle} => {arcSegment.Size});");
             }
 
             return Result;
