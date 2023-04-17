@@ -1,13 +1,11 @@
 ﻿using Svg;
 using Svg.Pathing;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using ToGeometryConverter.Object;
 using ToGeometryConverter.Object.Elements;
 using Point = System.Windows.Point;
@@ -38,7 +36,7 @@ namespace ToGeometryConverter.Format
 
         public async Task<object> Parse(string text)
         {
-            return await Task<object>.Run(() =>
+            return await Task.Run(() =>
             {
                 byte[] bytes = Encoding.UTF8.GetBytes(text);
                 MemoryStream stream = new MemoryStream(bytes);

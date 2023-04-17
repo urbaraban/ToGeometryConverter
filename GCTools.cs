@@ -118,9 +118,7 @@ namespace ToGeometryConverter
             double idet = 1 / det;
 
             Point Center = new Point((bc * (B.Y - C.Y) - cd * (A.Y - B.Y)) * idet, (cd * (A.X - B.X) - bc * (B.X - C.X)) * idet);
-
             double radius = Math.Sqrt(Math.Pow(B.X - Center.X, 2) + Math.Pow(B.Y - Center.Y, 2));
-
             double angle = GCTools.GetAngleThreePoint(A, Center, C);
 
             if (double.IsNaN(angle) == false &&
