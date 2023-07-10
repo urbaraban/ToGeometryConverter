@@ -20,7 +20,7 @@ namespace ToGeometryConverter.Format
 
         public override Get ReadFile => GetAsync;
 
-        private async Task<object> GetAsync(string filename, double CRS)
+        private async Task<object> GetAsync(string filename)
         {
             DxfFile dxfFile;
             try
@@ -51,7 +51,7 @@ namespace ToGeometryConverter.Format
                     }
                     foreach (DxfLayer layer in dxfLayers)
                     {
-                        GCCollection layercollect = ParseEntities(dxfFile.Entities, dxfFile.Blocks, layer.Name, dxfFile.Header.InsertionBase, CRS);
+                        GCCollection layercollect = ParseEntities(dxfFile.Entities, dxfFile.Blocks, layer.Name, dxfFile.Header.InsertionBase);
                         if (layercollect.Count > 0)
                         {
                             elements.Add(layercollect);
@@ -88,7 +88,7 @@ namespace ToGeometryConverter.Format
             return dxfLayers;
         }
 
-        private GCCollection ParseEntities(IList<DxfEntity> entitys, IList<DxfBlock> blocks, string LayerName, DxfPoint location, double CRS, bool insert = false)
+        private GCCollection ParseEntities(IList<DxfEntity> entitys, IList<DxfBlock> blocks, string LayerName, DxfPoint location, bool insert = false)
         {
             GCCollection gccollection = new GCCollection(LayerName);
 
@@ -108,13 +108,13 @@ namespace ToGeometryConverter.Format
                                 location.X + dxfInsert.Location.X,
                                 location.Y + dxfInsert.Location.Y,
                                 location.Z + dxfInsert.Location.Z);
-                            gccollection.AddRange(ParseEntities(dxfBlock.Entities, blocks, LayerName, insert_location, CRS, true));
+                            gccollection.AddRange(ParseEntities(dxfBlock.Entities, blocks, LayerName, insert_location, true));
                         }
                     }
                 }
                 else
                 {
-                    IGCObject obj = ParseObject(lentity[i], CRS, location);
+                    IGCObject obj = ParseObject(lentity[i], location);
                     if (obj != null)
                     {
                         gccollection.Add(obj);
@@ -127,7 +127,7 @@ namespace ToGeometryConverter.Format
             return gccollection;
         }
 
-        private static IGCObject ParseObject(DxfEntity entity, double CRS, DxfPoint Location)
+        private static IGCObject ParseObject(DxfEntity entity, DxfPoint Location)
         {
             switch (entity)
             {
@@ -150,7 +150,7 @@ namespace ToGeometryConverter.Format
                         entity.EntityType.ToString());
 
                 case DxfHelix dxfHelix:
-                    PointCollection points = new PointCollection(GetSpiralPoints(dxfHelix, CRS));
+                    PointCollection points = new PointCollection(GetSpiralPoints(dxfHelix));
                     return new GeometryElement(GCTools.FigureToGeometry(new PathFigure()
                         {
                             StartPoint = GCTools.Dxftp(dxfHelix.AxisBasePoint, new DxfVector(0,0,1), Location),
@@ -302,7 +302,7 @@ namespace ToGeometryConverter.Format
         /// </summary>
         /// <param name="dxfHelix"></param>
         /// <returns></returns>
-        private static List<Point> GetSpiralPoints(DxfHelix dxfHelix, double CRS)
+        private static List<Point> GetSpiralPoints(DxfHelix dxfHelix)
         {
             double StartAngle = Math.Atan2(dxfHelix.AxisBasePoint.Y - dxfHelix.StartPoint.Y, dxfHelix.AxisBasePoint.X - dxfHelix.StartPoint.X);
 
@@ -311,7 +311,7 @@ namespace ToGeometryConverter.Format
             // Get the points.
             List<Point> points = new List<Point>();
 
-            int steps = (int)((2 * Math.PI * HelixRadius * dxfHelix.NumberOfTurns) /CRS);
+            int steps = (int)((2 * Math.PI * HelixRadius * dxfHelix.NumberOfTurns));
 
             double dtheta = (Math.PI * 2 * dxfHelix.NumberOfTurns) / steps * (dxfHelix.IsRightHanded ? -1 : 1);    // Five degrees.
 

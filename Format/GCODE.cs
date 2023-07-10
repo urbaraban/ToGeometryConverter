@@ -18,7 +18,7 @@ namespace ToGeometryConverter.Format
         }
 
 
-        public async Task<object> GetAsync(string Filepath, double RoundStep)
+        public async Task<object> GetAsync(string Filepath)
         {
             if (File.Exists(Filepath) == true) {
                 GCCollection gccollection = new GCCollection(Name);

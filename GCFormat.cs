@@ -4,7 +4,7 @@ namespace ToGeometryConverter
 {
     public class GCFormat
     {
-        public delegate Task<object> Get(string filepath, double RoundStep);
+        public delegate Task<object> Get(string filepath);
         public virtual Get ReadFile { get; set; }
 
         public string Name { get; private set; }

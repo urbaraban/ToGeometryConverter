@@ -19,7 +19,7 @@ namespace ToGeometryConverter.Format
 
         public override Get ReadFile => GetAsync;
 
-        private async Task<object> GetAsync(string filepath, double RoundStep)
+        private async Task<object> GetAsync(string filepath)
         {
             return await Task<object>.Run(() =>
             {

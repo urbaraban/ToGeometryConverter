@@ -15,7 +15,7 @@ namespace ToGeometryConverter.Format
             this.ReadFile = GetAsync;
         }
 
-        private async Task<object> GetAsync(string Filename, double RoundStep)
+        private async Task<object> GetAsync(string Filename)
         {
             if (File.Exists(Filename))
             {

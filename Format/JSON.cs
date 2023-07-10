@@ -15,7 +15,7 @@ namespace ToGeometryConverter.Format
             this.ReadFile = GetAsync;
         }
 
-        private async Task<object> GetAsync(string Filename, double RoundStep)
+        private async Task<object> GetAsync(string Filename)
         {
             string openStream = File.ReadAllText(Filename);
             JObject Main = (JObject)JsonConvert.DeserializeObject(openStream);
