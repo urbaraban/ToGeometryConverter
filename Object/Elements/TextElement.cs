@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
@@ -45,7 +46,7 @@ namespace ToGeometryConverter.Object.Elements
             this.Size = Size;
             this.formattedText = new FormattedText(Text,
                                 CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
-                                new Typeface("Tahoma"), Size * 5, Brushes.Black);
+                                new Typeface("Tahoma"), Math.Max(Size, 1) * 5, Brushes.Black);
 
             MyGeometry = new Task<Geometry>(() => { return formattedText.BuildGeometry(new Point(this.Point.X, this.Point.Y)); });
             this.bounds = Bounds;
