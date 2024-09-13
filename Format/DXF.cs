@@ -156,7 +156,7 @@ namespace ToGeometryConverter.Format
                             StartPoint = GCTools.Dxftp(dxfHelix.AxisBasePoint, new DxfVector(0,0,1), Location),
                             Segments = new PathSegmentCollection()
                             {
-                                        new PolyLineSegment(points, true)
+                                new PolyLineSegment(points, true)
                             }
                         }), entity.EntityType.ToString());
 
