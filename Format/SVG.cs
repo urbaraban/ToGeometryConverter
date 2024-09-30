@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Media;
 using ToGeometryConverter.Object;
 using ToGeometryConverter.Object.Elements;
+using static System.Net.Mime.MediaTypeNames;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
 
@@ -28,6 +29,11 @@ namespace ToGeometryConverter.Format
                     SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
                     GCTools.Log?.Invoke($"Load {this.Name} file: {filepath}", "GCTool");
                     GCCollection retcollection = SwitchCollection(svgDoc.Children, GCTools.GetName(filepath));
+
+                    retcollection.Add(new TextElement(Path.GetFileName(filepath), 10,
+                        new System.Windows.Media.Media3D.Point3D(
+                            retcollection.Bounds.BottomLeft.X, 
+                            retcollection.Bounds.BottomLeft.Y + 500, 0)));
                     return retcollection;
                 }
                 return null;
