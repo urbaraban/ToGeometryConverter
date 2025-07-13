@@ -8,7 +8,6 @@ using System.Windows;
 using System.Windows.Media;
 using ToGeometryConverter.Object;
 using ToGeometryConverter.Object.Elements;
-using static System.Net.Mime.MediaTypeNames;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
 

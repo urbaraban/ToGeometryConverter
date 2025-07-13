@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media.Media3D;
 using ToGeometryConverter.Object;
 using ToGeometryConverter.Object.Elements;
 

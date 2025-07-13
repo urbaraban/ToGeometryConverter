@@ -3,8 +3,6 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.TextFormatting;
-using System.Xml.Linq;
 using ToGeometryConverter.Object;
 using ToGeometryConverter.Object.Elements;
 
