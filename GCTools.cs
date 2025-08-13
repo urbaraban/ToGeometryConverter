@@ -36,10 +36,14 @@ namespace ToGeometryConverter
         /// <param name="point"></param>
         /// <param name="normal"></param>
         /// <returns></returns>
-        public static Point Dxftp(DxfPoint point, DxfVector normal, DxfPoint location)
+        public static Point Dxftp(DxfPoint point, DxfVector normal, DxfPoint location, double scaleFactor)
         {
             Vector3 VectorNormal = new Vector3((float)normal.X, (float)normal.Z, (float)normal.Y);
-            Vector3 VectorPoint = new Vector3((float)(point.X + location.X), (float)(point.Y + location.Y), (float)(point.Z + location.Z));
+            Vector3 VectorPoint = new Vector3(
+                (float)((point.X + location.X) * scaleFactor), 
+                (float)((point.Y + location.Y) * scaleFactor), 
+                (float)((point.Z + location.Z) * scaleFactor));
+
             System.Numerics.Quaternion quaternion = System.Numerics.Quaternion.CreateFromAxisAngle(VectorNormal, (float)(VectorNormal.Y < 0 ? Math.PI : 0));
             Vector3 outVector = Vector3.Transform(VectorPoint, quaternion);
             return new Point
@@ -50,9 +54,9 @@ namespace ToGeometryConverter
         }
 
 
-        public static Point DxfLwVtp(DxfLwPolylineVertex point)
+        public static Point DxfLwVtp(DxfLwPolylineVertex point, double scaleFactor, double invertor = -1)
         {
-            return new Point(point.X, -point.Y);
+            return new Point(point.X * scaleFactor, point.Y * scaleFactor * invertor);
         }
 
         /// <summary>
