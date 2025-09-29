@@ -17,10 +17,8 @@ namespace ToGeometryConverter.Format
             this.location = location;
             try
             {
-                using (BinaryReader reader = new BinaryReader(File.Open(location, FileMode.Open)))
-                {
-                    b = reader.ReadBytes((int)reader.BaseStream.Length);
-                }
+                using BinaryReader reader = new BinaryReader(File.Open(location, FileMode.Open));
+                b = reader.ReadBytes((int)reader.BaseStream.Length);
             }
             catch (Exception e)
             {

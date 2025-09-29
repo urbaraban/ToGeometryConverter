@@ -90,7 +90,7 @@ namespace ToGeometryConverter.Object
             return geometryGroup;
         }
 
-        public string ToString() => $"EC:{this.Count}";
+        public override string ToString() => $"EC:{this.Count}";
 
         #region IList<IGCObject>
         public IGCObject this[int index] { get => ((IList<IGCObject>)Elements)[index]; set => ((IList<IGCObject>)Elements)[index] = value; }

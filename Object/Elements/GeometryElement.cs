@@ -33,6 +33,6 @@ namespace ToGeometryConverter.Object.Elements
             return GCTools.GetPointsGeometries(this.GetPointCollection(Transform, RoundStep, RoundEdge));
         }
 
-        public string ToString() => MyGeometry.ToString();
+        public override string ToString() => MyGeometry.ToString();
     }
 }

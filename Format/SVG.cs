@@ -25,7 +25,7 @@ namespace ToGeometryConverter.Format
             {
                 if (File.Exists(filepath) == true)
                 {
-                    SvgDocument svgDoc = SvgDocument.Open<SvgDocument>(filepath, new Dictionary<string, string>());
+                    SvgDocument svgDoc = SvgDocument.Open(filepath);
                     GCTools.Log?.Invoke($"Load {this.Name} file: {filepath}", "GCTool");
                     GCCollection retcollection = SwitchCollection(svgDoc.Children, GCTools.GetName(filepath));
 
