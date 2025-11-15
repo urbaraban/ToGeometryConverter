@@ -4,7 +4,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>ToGeometryConverter</RootNamespace>
     <AssemblyName>ToGeometryConverter</AssemblyName>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>13.0</LangVersion>
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <AssemblyOriginatorKeyFile />

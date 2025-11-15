@@ -55,7 +55,7 @@ namespace ToGeometryConverter.Format
         public ulong GetLong(bool reverce)
         {
             ulong temp = BitConverter.ToUInt64(
-                reverce == true ? this.GetByte(8).Reverse().ToArray() : this.GetByte(8),
+                reverce == true ? [.. this.GetByte(8).Reverse()] : this.GetByte(8),
                reverce == true ? 0 : position);
             position += 8;
             return temp;
