@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>ToGeometryConverter</RootNamespace>
     <AssemblyName>ToGeometryConverter</AssemblyName>
-    <LangVersion>13.0</LangVersion>
+    <LangVersion>14.0</LangVersion>
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <AssemblyOriginatorKeyFile />
