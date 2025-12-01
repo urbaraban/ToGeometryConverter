@@ -296,7 +296,7 @@ namespace ToGeometryConverter.Format
 
 
                 case DxfSpline dxfSpline:
-                    ObservableCollection<RationalBSplinePoint> rationalBSplinePoints = new ObservableCollection<RationalBSplinePoint>();
+                    List<RationalBSplinePoint> rationalBSplinePoints = new();
 
                     foreach (DxfControlPoint controlPoint in dxfSpline.ControlPoints)
                     { 

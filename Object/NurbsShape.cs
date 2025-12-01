@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -16,24 +15,45 @@ namespace ToGeometryConverter.Object
         public bool IsBSpline { get; set; }
 
         // private PathGeometry pathGeometry;
-        private readonly ObservableCollection<RationalBSplinePoint> _point;
+        private readonly List<RationalBSplinePoint> _point;
         private int _degree;
         private readonly IList<double> _knotvector;
 
+        private Geometry geometry;
 
         public static implicit operator Geometry(NurbsShape nurbs)
         {
-            return nurbs.GetArcGeometry();
+            return nurbs.geometry;
         }
 
-        public NurbsShape(ObservableCollection<RationalBSplinePoint> Points, int Degree, IList<double> KnotVector, bool IsBspline)
+        public NurbsShape(List<RationalBSplinePoint> Points, int Degree, IList<double> KnotVector, bool IsBspline)
         {
             this._point = Points;
             this._degree = Degree;
             this._knotvector = KnotVector;
             this.IsBSpline = IsBspline;
+
+            this.geometry = this.GetArcGeometry();
         }
 
+        // План (псевдокод, детально):
+        // 1. Сгенерировать набор точек кривой как раньше.
+        // 2. Итерироваться по точкам, формируя либо дуги, либо отрезки:
+        //    - На каждой итерации пробуем подобрать окружность по трем подряд точкам (start, mid, end).
+        //    - Если окружность найдена и радиус разумный (не бесконечный и не слишком огромный относительно длины кривой),
+        //      пытаемся "расти" дугу, добавляя последующие точки, если:
+        //         * расстояние точки до найденного центра близко к радиусу (в пределах абсолютного или относительного порога),
+        //         * направление вращения (знак угла) сохраняется (не происходит резкой смены направления),
+        //         * угол не перескакивает через 180° непредсказуемо.
+        //    - Если точки не укладываются в окружность (параллельные/коллинеарные), добавляем LineSegment для следующей точки.
+        // 3. Для собранной группы точек, представляющей дугу, создаем ArcSegment на основе стартовой/средней/конечной точки.
+        // 4. Для устойчивости проверяем ограничение на максимальное отношение радиуса к длине хорды (защита от "чрезмерно большой" окружности).
+        // 5. Возвращаем PathGeometry, если есть сегменты.
+        //
+        // Дополнительно:
+        // - Реализована функция TryFitCircle для вычисления центра и радиуса по трем точкам.
+        // - Порог отклонения от окружности = max(1.0, radius * 0.02) (2% или 1 единица).
+        // - Максимальный допустимый радиус = maxChord * 50 (защита от аномально больших радиусов).
         private PathGeometry GetArcGeometry()
         {
             PointCollection points = new PointCollection();
@@ -49,6 +69,7 @@ namespace ToGeometryConverter.Object
 
             PathGeometry pathGeometry = null;
             PathFigure Figures = new PathFigure();
+
             if (points.Count == 2)
             {
                 Figures.StartPoint = points[0];
@@ -58,27 +79,103 @@ namespace ToGeometryConverter.Object
             {
                 Figures.StartPoint = points[0];
 
-                for (int i = 2; i < points.Count; i += 2)
-                {
-                    PointCollection ArcCollection = new PointCollection() {
-                            points[i - 2],
-                            points[i - 1],
-                    };
-                    double StartAngel = Math.Abs(GetAngleThreePoint(points[i - 2], points[i - 1], points[i]));
-                    double AlreadyAngel = StartAngel;
+                // Предварительные величины для защиты от чрезмерно большого радиуса
+                double minX = points.Min(p => p.X);
+                double maxX = points.Max(p => p.X);
+                double minY = points.Min(p => p.Y);
+                double maxY = points.Max(p => p.Y);
+                double maxChord = Math.Sqrt((maxX - minX) * (maxX - minX) + (maxY - minY) * (maxY - minY));
+                double maxRadiusAllowed = Math.Max(1.0, maxChord * 50.0);
 
-                    while (Math.Abs(StartAngel - AlreadyAngel) < 5 && i < points.Count)
+                int idx = 1; // текущая точка (points[idx]) - кандидат на конец сегмента или середину
+                while (idx < points.Count)
+                {
+                    if (idx + 1 >= points.Count)
                     {
-                        ArcCollection.Add(points[i]);
-                        i += 1;
-                        if (i < points.Count)
-                            AlreadyAngel = Math.Abs(GetAngleThreePoint(points[i - 2], points[i - 1], points[i]));
-                        else
-                            AlreadyAngel = StartAngel + 10;
+                        // Осталась одна точка - просто линия до нее
+                        Figures.Segments.Add(new LineSegment(points[idx], true));
+                        break;
                     }
-                    Point last = ArcCollection.Last();
-                    ArcSegment segment = GetArcSegment(ArcCollection[0], ArcCollection[ArcCollection.Count / 2], last);
+
+                    Point p0 = points[idx - 1];
+                    Point p1 = points[idx];
+                    Point p2 = points[idx + 1];
+
+                    Point center;
+                    double radius;
+                    bool circleFound = TryFitCircle(p0, p1, p2, out center, out radius);
+                    if (!circleFound || double.IsNaN(radius) || double.IsInfinity(radius) || radius <= 1e-6 || radius > maxRadiusAllowed)
+                    {
+                        // Нельзя построить корректную окружность — добавляем отрезок до следующей точки
+                        Figures.Segments.Add(new LineSegment(p1, true));
+                        idx += 1;
+                        continue;
+                    }
+
+                    // Начальные параметры для роста дуги
+                    int startIndex = idx - 1;
+                    int lastIndex = idx + 1;
+                    double tolerance = Math.Max(1.0, radius * 0.0002); // 2% или 1 пиксель
+                    double initialAngle = GetAngleThreePoint(points[startIndex], center, points[startIndex + 1]);
+                    int initialSign = Math.Sign(initialAngle);
+                    if (initialSign == 0)
+                        initialSign = 1; // не нулевой выбор направления
+
+                    // Расширяем дугу, если последующие точки принадлежат той же окружности и направление не меняется
+                    while (lastIndex + 1 < points.Count)
+                    {
+                        Point candidate = points[lastIndex + 1];
+                        double distToCenter = Math.Sqrt((candidate.X - center.X) * (candidate.X - center.X) + (candidate.Y - center.Y) * (candidate.Y - center.Y));
+                        if (Math.Abs(distToCenter - radius) > tolerance)
+                            break;
+
+                        double angleToCandidate = GetAngleThreePoint(points[startIndex], center, candidate);
+                        if (double.IsNaN(angleToCandidate) || double.IsInfinity(angleToCandidate))
+                        {
+                            // пропустить кандидат или завершить рост дуги
+                            break;
+                        }
+                        int signToCandidate = Math.Sign(angleToCandidate);
+                        if (signToCandidate == 0)
+                            signToCandidate = initialSign;
+
+                        // Направление должно совпадать
+                        if (signToCandidate != initialSign)
+                            break;
+
+                        // Дополнительно: не позволяем "перескоков" угла более 180 град
+                        double totalAngle = GetAngleThreePoint(points[startIndex], center, candidate);
+                        if (Math.Abs(totalAngle) > 720) // слишком большой скачок — защитный предел
+                            break;
+
+                        lastIndex += 1;
+                    }
+
+                    // Если дуга состоит только из трех точек, всё равно используем ArcSegment
+                    Point arcStart = points[startIndex];
+                    Point arcMid = points[(startIndex + lastIndex) / 2];
+                    Point arcEnd = points[lastIndex];
+
+                    // Если по какой-то причине средняя точка равна началу или концу, fallback на линию
+                    if ((arcStart == arcMid) || (arcMid == arcEnd))
+                    {
+                        Figures.Segments.Add(new LineSegment(points[idx], true));
+                        idx += 1;
+                        continue;
+                    }
+
+                    ArcSegment segment = GetArcSegment(arcStart, arcMid, arcEnd);
+                    // Если GetArcSegment вернул некорректный радиус или NaN, тогда fallback
+                    if (segment == null || segment.Size.IsEmpty || double.IsNaN(segment.Size.Width) || double.IsInfinity(segment.Size.Width) || segment.Size.Width <= 1e-6)
+                    {
+                        Figures.Segments.Add(new LineSegment(points[idx], true));
+                        idx += 1;
+                        continue;
+                    }
+
                     Figures.Segments.Add(segment);
+                    // Перемещаем индекс за последний использованный
+                    idx = lastIndex + 1;
                 }
             }
 
@@ -88,6 +185,49 @@ namespace ToGeometryConverter.Object
             }
 
             return pathGeometry;
+        }
+
+        // Попытаться найти окружность по трем точкам. Возвращает false если точки коллинеарны или вычисление центра неудачно.
+        private bool TryFitCircle(Point start, Point middle, Point end, out Point center, out double radius)
+        {
+            // Построение перпендикулярных биссектрис между (start,middle) и (middle,end)
+            double x1 = (middle.X + start.X) / 2.0;
+            double y1 = (middle.Y + start.Y) / 2.0;
+            double dy1 = middle.X - start.X;
+            double dx1 = -(middle.Y - start.Y);
+
+            double x2 = (end.X + middle.X) / 2.0;
+            double y2 = (end.Y + middle.Y) / 2.0;
+            double dy2 = end.X - middle.X;
+            double dx2 = -(end.Y - middle.Y);
+
+            bool lines_intersect, segments_intersect;
+            Point intersection, close1, close2;
+
+            FindIntersection(
+                new Point(x1, y1), new Point(x1 + dx1, y1 + dy1),
+                new Point(x2, y2), new Point(x2 + dx2, y2 + dy2),
+                out lines_intersect, out segments_intersect,
+                out intersection, out close1, out close2);
+
+            if (!lines_intersect || double.IsNaN(intersection.X) || double.IsNaN(intersection.Y))
+            {
+                center = new Point(double.NaN, double.NaN);
+                radius = double.NaN;
+                return false;
+            }
+
+            center = intersection;
+            double dx = center.X - start.X;
+            double dy = center.Y - start.Y;
+            radius = Math.Sqrt(dx * dx + dy * dy);
+
+            if (double.IsInfinity(radius) || double.IsNaN(radius) || radius <= 1e-6)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -232,18 +372,23 @@ namespace ToGeometryConverter.Object
 
         private Point RationalBSplinePoint(IList<RationalBSplinePoint> Points, int degree, IList<double> KnotVector, double t)
         {
-            double x, y;
-            x = 0;
-            y = 0;
+            double x = 0, y = 0;
             double rationalWeight = 0d;
 
-            for (int i = 0; i < Points.Count; i += 1)
+            for (int i = 0; i < Points.Count; i++)
             {
                 double NIP = Nip(i, degree, KnotVector, t) * Points[i].Weight;
                 rationalWeight += NIP;
             }
 
-            for (int i = 0; i < Points.Count; i += 1)
+            const double EPS = 1e-12;
+            if (Math.Abs(rationalWeight) < EPS)
+            {
+                // fallback: либо невзвешенная точка, либо центр масс, либо предыдущая точка
+                return new Point(Points[0].X, Points[0].Y);
+            }
+
+            for (int i = 0; i < Points.Count; i++)
             {
                 double NIP = Nip(i, degree, KnotVector, t);
                 x += Points[i].X * Points[i].Weight * NIP / rationalWeight;
@@ -267,7 +412,7 @@ namespace ToGeometryConverter.Object
             if (step < Knot[PointIndex] || step >= Knot[PointIndex + degree + 1])
                 return 0;
 
-            for (int j = 0; j <= degree; j += 1)
+            for (int j = 0; j <= degree; j++)
             {
                 double round = Math.Round(step, 6);
                 if (step >= Knot[PointIndex + j] && round < Knot[PointIndex + j + 1])
@@ -276,26 +421,32 @@ namespace ToGeometryConverter.Object
                     N[j] = 0d;
             }
 
-            for (int k = 1; k <= degree; k += 1)
+            const double EPS = 1e-12;
+            for (int k = 1; k <= degree; k++)
             {
                 if (N[0] == 0)
                     saved = 0d;
                 else
-                    saved = ((step - Knot[PointIndex]) * N[0]) / (Knot[PointIndex + k] - Knot[PointIndex]);
+                {
+                    double denom = (Knot[PointIndex + k] - Knot[PointIndex]);
+                    if (Math.Abs(denom) < EPS) saved = 0d;
+                    else saved = ((step - Knot[PointIndex]) * N[0]) / denom;
+                }
 
-                for (int j = 0; j < degree - k + 1; j += 1)
+                for (int j = 0; j < degree - k + 1; j++)
                 {
                     double Uleft = Knot[PointIndex + j + 1];
                     double Uright = Knot[PointIndex + j + k + 1];
+                    double denom = (Uright - Uleft);
 
-                    if (N[j + 1] == 0)
+                    if (N[j + 1] == 0 || Math.Abs(denom) < EPS)
                     {
                         N[j] = saved;
                         saved = 0d;
                     }
                     else
                     {
-                        temp = N[j + 1] / (Uright - Uleft);
+                        temp = N[j + 1] / denom;
                         N[j] = saved + (Uright - step) * temp;
                         saved = (step - Uleft) * temp;
                     }
