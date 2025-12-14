@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Media3D;
 using Vector = System.Windows.Vector;
 
 namespace ToGeometryConverter.Object
@@ -32,7 +31,7 @@ namespace ToGeometryConverter.Object
             this._knotvector = KnotVector;
             this.IsBSpline = IsBspline;
 
-            this.geometry = this.GetArcGeometry(100);
+            this.geometry = this.GetArcGeometry();
         }
 
         // План (псевдокод, детально):
@@ -53,27 +52,22 @@ namespace ToGeometryConverter.Object
         // - Реализована функция TryFitCircle для вычисления центра и радиуса по трем точкам.
         // - Порог отклонения от окружности = max(1.0, radius * 0.02) (2% или 1 единица).
         // - Максимальный допустимый радиус = maxChord * 50 (защита от аномально больших радиусов).
-        private PathGeometry GetArcGeometry(double maxSegmentLength = 40.0)
+        private PathGeometry GetArcGeometry()
         {
-            if (maxSegmentLength <= 0) maxSegmentLength = 40.0;
-
-            // 1. Оценим длину кривой, чтобы определить нужное количество точек
-            int estimatedPointCount = EstimatePointCountForLength(maxSegmentLength);
-
-            // 2. Генерируем точки с адаптивным шагом
             PointCollection points = new PointCollection();
-            for (int i = 0; i <= estimatedPointCount; i++)
-            {
-                double t = (double)i / estimatedPointCount;
-                if (this.IsBSpline == true)
-                    points.Add(BSplinePoint(this._point, this._degree, this._knotvector, t));
-                else
-                    points.Add(RationalBSplinePoint(this._point, this._degree, this._knotvector, t));
-            }
 
-            // Остальной код остаётся без изменений...
+            for (double i = 0; i < 1; i += 0.01)
+            {
+                if (this.IsBSpline == true)
+                    points.Add(BSplinePoint(this._point, this._degree, this._knotvector, i));
+                else
+                    points.Add(RationalBSplinePoint(this._point, this._degree, this._knotvector, i));
+            }
+            points.Add(new Point(this._point.Last().X, this._point.Last().Y));
+
             PathGeometry pathGeometry = null;
             PathFigure Figures = new PathFigure();
+
             if (points.Count == 2)
             {
                 Figures.StartPoint = points[0];
@@ -81,89 +75,113 @@ namespace ToGeometryConverter.Object
             }
             else if (points.Count > 2)
             {
-                // ... (весь остальной код из оригинального метода, начиная с вычисления maxChord)
                 Figures.StartPoint = points[0];
+
+                // Предварительные величины для защиты от чрезмерно большого радиуса
                 double minX = points.Min(p => p.X);
                 double maxX = points.Max(p => p.X);
                 double minY = points.Min(p => p.Y);
                 double maxY = points.Max(p => p.Y);
                 double maxChord = Math.Sqrt((maxX - minX) * (maxX - minX) + (maxY - minY) * (maxY - minY));
                 double maxRadiusAllowed = Math.Max(1.0, maxChord * 50.0);
-                int idx = 1;
+
+                int idx = 1; // текущая точка (points[idx]) - кандидат на конец сегмента или середину
                 while (idx < points.Count)
                 {
-                    // ... (полностью скопируйте тело цикла из оригинального метода)
-                    // (я не повторяю его здесь целиком, чтобы не дублировать 50+ строк)
-                    // Просто вставьте оригинальный код от "if (idx + 1 >= points.Count)" до конца while-цикла
                     if (idx + 1 >= points.Count)
                     {
+                        // Осталась одна точка - просто линия до нее
                         Figures.Segments.Add(new LineSegment(points[idx], true));
                         break;
                     }
+
                     Point p0 = points[idx - 1];
                     Point p1 = points[idx];
                     Point p2 = points[idx + 1];
+
                     Point center;
                     double radius;
                     bool circleFound = TryFitCircle(p0, p1, p2, out center, out radius);
                     if (!circleFound || double.IsNaN(radius) || double.IsInfinity(radius) || radius <= 1e-6 || radius > maxRadiusAllowed)
                     {
+                        // Нельзя построить корректную окружность — добавляем отрезок до следующей точки
                         Figures.Segments.Add(new LineSegment(p1, true));
                         idx += 1;
                         continue;
                     }
+
+                    // Начальные параметры для роста дуги
                     int startIndex = idx - 1;
                     int lastIndex = idx + 1;
-                    double tolerance = Math.Max(1.0, radius * 0.02);
+                    double tolerance = Math.Max(1.0, radius * 0.0002); // 2% или 1 пиксель
                     double initialAngle = GetAngleThreePoint(points[startIndex], center, points[startIndex + 1]);
                     int initialSign = Math.Sign(initialAngle);
                     if (initialSign == 0)
-                        initialSign = 1;
+                        initialSign = 1; // не нулевой выбор направления
+
+                    // Расширяем дугу, если последующие точки принадлежат той же окружности и направление не меняется
                     while (lastIndex + 1 < points.Count)
                     {
                         Point candidate = points[lastIndex + 1];
                         double distToCenter = Math.Sqrt((candidate.X - center.X) * (candidate.X - center.X) + (candidate.Y - center.Y) * (candidate.Y - center.Y));
                         if (Math.Abs(distToCenter - radius) > tolerance)
                             break;
+
                         double angleToCandidate = GetAngleThreePoint(points[startIndex], center, candidate);
                         if (double.IsNaN(angleToCandidate) || double.IsInfinity(angleToCandidate))
                         {
+                            // пропустить кандидат или завершить рост дуги
                             break;
                         }
                         int signToCandidate = Math.Sign(angleToCandidate);
                         if (signToCandidate == 0)
                             signToCandidate = initialSign;
+
+                        // Направление должно совпадать
                         if (signToCandidate != initialSign)
                             break;
+
+                        // Дополнительно: не позволяем "перескоков" угла более 180 град
                         double totalAngle = GetAngleThreePoint(points[startIndex], center, candidate);
-                        if (Math.Abs(totalAngle) > 720)
+                        if (Math.Abs(totalAngle) > 720) // слишком большой скачок — защитный предел
                             break;
+
                         lastIndex += 1;
                     }
+
+                    // Если дуга состоит только из трех точек, всё равно используем ArcSegment
                     Point arcStart = points[startIndex];
                     Point arcMid = points[(startIndex + lastIndex) / 2];
                     Point arcEnd = points[lastIndex];
+
+                    // Если по какой-то причине средняя точка равна началу или концу, fallback на линию
                     if ((arcStart == arcMid) || (arcMid == arcEnd))
                     {
                         Figures.Segments.Add(new LineSegment(points[idx], true));
                         idx += 1;
                         continue;
                     }
+
                     ArcSegment segment = GetArcSegment(arcStart, arcMid, arcEnd);
+                    // Если GetArcSegment вернул некорректный радиус или NaN, тогда fallback
                     if (segment == null || segment.Size.IsEmpty || double.IsNaN(segment.Size.Width) || double.IsInfinity(segment.Size.Width) || segment.Size.Width <= 1e-6)
                     {
                         Figures.Segments.Add(new LineSegment(points[idx], true));
                         idx += 1;
                         continue;
                     }
+
                     Figures.Segments.Add(segment);
+                    // Перемещаем индекс за последний использованный
                     idx = lastIndex + 1;
                 }
             }
+
             if (Figures.Segments.Count > 0)
             {
                 pathGeometry = new PathGeometry(new List<PathFigure>() { Figures });
             }
+
             return pathGeometry;
         }
 
@@ -448,34 +466,6 @@ namespace ToGeometryConverter.Object
             Vector v2 = new Vector((float)(Point2.X - Center.X), (float)(Point2.Y - Center.Y));
 
             return Vector.AngleBetween(v1, v2);
-        }
-
-        // Оценивает необходимое количество точек для заданной максимальной длины сегмента
-        private int EstimatePointCountForLength(double maxSegmentLength)
-        {
-            // Быстрая оценка длины кривой через 20-50 точек
-            int sampleCount = 30;
-            double estimatedLength = 0.0;
-            Point prev = this.IsBSpline
-                ? BSplinePoint(this._point, this._degree, this._knotvector, 0.0)
-                : RationalBSplinePoint(this._point, this._degree, this._knotvector, 0.0);
-
-            for (int i = 1; i <= sampleCount; i++)
-            {
-                double t = (double)i / sampleCount;
-                Point curr = this.IsBSpline
-                    ? BSplinePoint(this._point, this._degree, this._knotvector, t)
-                    : RationalBSplinePoint(this._point, this._degree, this._knotvector, t);
-
-                estimatedLength += Math.Sqrt(
-                    Math.Pow(curr.X - prev.X, 2) +
-                    Math.Pow(curr.Y - prev.Y, 2));
-                prev = curr;
-            }
-
-            // Рассчитываем количество сегментов (минимум 5, максимум 1000)
-            int segmentCount = (int)Math.Ceiling(estimatedLength / maxSegmentLength);
-            return Math.Max(5, Math.Min(1000, segmentCount));
         }
     }
 }
