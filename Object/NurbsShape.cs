@@ -114,7 +114,7 @@ namespace ToGeometryConverter.Object
                     }
                     int startIndex = idx - 1;
                     int lastIndex = idx + 1;
-                    double tolerance = Math.Max(1.0, radius * 0.02);
+                    double tolerance = Math.Max(1.0, radius * 0.0002);
                     double initialAngle = GetAngleThreePoint(points[startIndex], center, points[startIndex + 1]);
                     int initialSign = Math.Sign(initialAngle);
                     if (initialSign == 0)
