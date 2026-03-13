@@ -1,4 +1,4 @@
-﻿using IxMilia.Dxf;
+using IxMilia.Dxf;
 using IxMilia.Dxf.Entities;
 using System;
 using System.Collections.Generic;
@@ -19,6 +19,11 @@ namespace ToGeometryConverter
 
         public delegate void Progress(int position, int max, string message);
         public static Progress SetProgress;
+
+        /// <summary>
+        /// Global DXF units override. Supported values: auto, mm, cm, m, in, ft.
+        /// </summary>
+        public static string DxfUnitsOverride { get; set; } = "auto";
 
         /// <summary>
         /// Drawing.PointF to Windows.Point

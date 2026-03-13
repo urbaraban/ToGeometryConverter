@@ -1,10 +1,11 @@
-﻿using IxMilia.Dxf;
+using IxMilia.Dxf;
 using IxMilia.Dxf.Blocks;
 using IxMilia.Dxf.Entities;
 using IxMilia.Dxf.Objects;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -38,11 +39,13 @@ namespace ToGeometryConverter.Format
                 dxfFile = null;
             }
 
-            var scaleFactor = GetScaleFactor(dxfFile.Header.DefaultDrawingUnits);
-
             if (dxfFile != null)
             {
+                var units = ResolveDrawingUnits(dxfFile, filename);
+                var scaleFactor = GetScaleFactor(units);
+
                 GCTools.Log?.Invoke($"Loaded dxf: {filename}", "GCTool");
+                GCTools.Log?.Invoke($"DXF units: {units}, scale factor: {scaleFactor}", "GCTool");
                 return await Task<object>.Run(async () =>
                 {
                     GCCollection elements = new GCCollection(filename.Split('\\').Last());
@@ -66,6 +69,97 @@ namespace ToGeometryConverter.Format
             }
 
             return null;
+        }
+
+        private static DxfUnits ResolveDrawingUnits(DxfFile dxfFile, string filename)
+        {
+            if (TryParseUnitsToken(GCTools.DxfUnitsOverride, out DxfUnits uiOverrideUnits))
+            {
+                return uiOverrideUnits;
+            }
+
+            if (TryReadUnitsOverride(filename, out DxfUnits overrideUnits))
+            {
+                return overrideUnits;
+            }
+
+            return dxfFile.Header.DefaultDrawingUnits;
+        }
+
+        private static bool TryReadUnitsOverride(string filename, out DxfUnits units)
+        {
+            // 1) Sidecar file priority: "<name>.dxf.units" or "<name>.units".
+            string[] sidecarFiles = new string[]
+            {
+                filename + ".units",
+                Path.ChangeExtension(filename, ".units")
+            };
+
+            foreach (string sidecarPath in sidecarFiles.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (File.Exists(sidecarPath))
+                {
+                    string token = File.ReadLines(sidecarPath)
+                        .FirstOrDefault(line => string.IsNullOrWhiteSpace(line) == false)?
+                        .Trim();
+
+                    if (TryParseUnitsToken(token, out units))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            // 2) Fallback from file name marker: "<name>__units-mm.dxf".
+            string baseName = Path.GetFileNameWithoutExtension(filename) ?? string.Empty;
+            const string marker = "__units-";
+            int markerIndex = baseName.LastIndexOf(marker, StringComparison.OrdinalIgnoreCase);
+            if (markerIndex >= 0)
+            {
+                string token = baseName.Substring(markerIndex + marker.Length);
+                if (TryParseUnitsToken(token, out units))
+                {
+                    return true;
+                }
+            }
+
+            units = default;
+            return false;
+        }
+
+        private static bool TryParseUnitsToken(string token, out DxfUnits units)
+        {
+            switch ((token ?? string.Empty).Trim().ToLowerInvariant())
+            {
+                case "mm":
+                case "millimeter":
+                case "millimeters":
+                    units = DxfUnits.Millimeters;
+                    return true;
+                case "cm":
+                case "centimeter":
+                case "centimeters":
+                    units = DxfUnits.Centimeters;
+                    return true;
+                case "m":
+                case "meter":
+                case "meters":
+                    units = DxfUnits.Meters;
+                    return true;
+                case "in":
+                case "inch":
+                case "inches":
+                    units = DxfUnits.Inches;
+                    return true;
+                case "ft":
+                case "foot":
+                case "feet":
+                    units = DxfUnits.Feet;
+                    return true;
+                default:
+                    units = default;
+                    return false;
+            }
         }
 
         private double GetScaleFactor(DxfUnits defaultDrawingUnits)
