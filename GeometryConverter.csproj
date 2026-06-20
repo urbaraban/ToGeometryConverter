@@ -19,7 +19,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="ACadSharp" Version="3.1.12" />
+    <PackageReference Include="ACadSharp" Version="3.6.29" />
     <PackageReference Include="IxMilia.Dxf" Version="0.8.4" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.NETCore.Platforms" Version="7.0.4" />

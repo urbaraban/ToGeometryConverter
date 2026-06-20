@@ -44,7 +44,7 @@ namespace ToGeometryConverter.Object.Elements
             this.Text = Text;
             this.Point = Point;
             this.Size = Size;
-            this.formattedText = new FormattedText(Text,
+            this.formattedText = new FormattedText(Text ?? "Empty",
                                 CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
                                 new Typeface("Tahoma"), Math.Max(Size, 1) * 5, Brushes.Black);
 
