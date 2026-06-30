@@ -397,7 +397,7 @@ namespace ToGeometryConverter.Format
                         Point point1 = GCTools.Dxftp(controlPoint.Point, dxfSpline.Normal, Location, scaleFactor);
                         rationalBSplinePoints.Add(new RationalBSplinePoint(point1.X, point1.Y, controlPoint.Weight));
                     }
-                    NurbsShape nurbsShape = new NurbsShape(rationalBSplinePoints, dxfSpline.DegreeOfCurve, dxfSpline.KnotValues, dxfSpline.IsRational == true);
+                    NurbsShape nurbsShape = new NurbsShape(rationalBSplinePoints, dxfSpline.DegreeOfCurve, dxfSpline.KnotValues, dxfSpline.IsRational != true);
                     return new GeometryElement(nurbsShape, entity.EntityType.ToString());
 
                 default:

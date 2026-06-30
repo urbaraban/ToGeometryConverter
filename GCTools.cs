@@ -124,6 +124,11 @@ namespace ToGeometryConverter
             double cd = (offset - Math.Pow(C.X, 2) - Math.Pow(C.Y, 2)) / 2.0;
             double det = (A.X - B.X) * (B.Y - C.Y) - (B.X - C.X) * (A.Y - B.Y);
 
+            if (Math.Abs(det) < 1e-12)
+            {
+                return null;
+            }
+
             double idet = 1 / det;
 
             Point Center = new Point((bc * (B.Y - C.Y) - cd * (A.Y - B.Y)) * idet, (cd * (A.X - B.X) - bc * (B.X - C.X)) * idet);
@@ -152,7 +157,6 @@ namespace ToGeometryConverter
                 ArcSegment arcSegment = new ArcSegment(C, new Size(radius, radius), rotationAngle,
                     isLarge, sweepDirection, true);
                 Result = arcSegment;
-                Console.WriteLine($"{angle} => {arcSegment.Size});");
             }
 
             return Result;
@@ -248,11 +252,7 @@ namespace ToGeometryConverter
                                     break;
 
                                 case PolyLineSegment polyLineSegment:
-                                    for (int i = 0; i < polyLineSegment.Points.Count; i++)
-                                    {
-                                        lObject.Add(new GCPoint3D(polyLineSegment.Points[i].X, polyLineSegment.Points[i].Y, 0));
-                                        LastPoint = polyLineSegment.Points.Last();
-                                    }
+                                    AppendPolylineByStep(lObject, ref LastPoint, polyLineSegment.Points, RoundStep);
                                     break;
 
                                 case PolyQuadraticBezierSegment polyQuadraticBezier:
@@ -421,6 +421,74 @@ namespace ToGeometryConverter
 
             return lObject;
         }
+
+        /// <summary>
+        /// Добавляет точки вдоль полилинии с шагом CRS (аналог CircleByStep для дуг).
+        /// </summary>
+        public static void AppendPolylineByStep(PointsElement target, ref Point lastPoint, PointCollection polylinePoints, double step)
+        {
+            if (polylinePoints == null || polylinePoints.Count == 0)
+            {
+                return;
+            }
+
+            if (step <= 0)
+            {
+                step = 1.0;
+            }
+
+            Point cursor = lastPoint;
+            double pending = 0;
+
+            foreach (Point vertex in polylinePoints)
+            {
+                AppendAlongSegment(target, ref cursor, ref pending, vertex, step);
+            }
+
+            Point end = polylinePoints[polylinePoints.Count - 1];
+            if (Distance2D(end, lastPoint) > 1e-6 &&
+                (target.Count == 0 || Distance2D(end, new Point(target[^1].X, target[^1].Y)) > 1e-6))
+            {
+                target.Add(new GCPoint3D(end.X, end.Y, 0));
+            }
+
+            lastPoint = end;
+        }
+
+        private static void AppendAlongSegment(PointsElement target, ref Point cursor, ref double pending, Point vertex, double step)
+        {
+            double dx = vertex.X - cursor.X;
+            double dy = vertex.Y - cursor.Y;
+            double segmentLength = Math.Sqrt(dx * dx + dy * dy);
+            if (segmentLength < 1e-12)
+            {
+                return;
+            }
+
+            double ux = dx / segmentLength;
+            double uy = dy / segmentLength;
+            double travelled = 0;
+
+            while (pending + (segmentLength - travelled) >= step)
+            {
+                double need = step - pending;
+                travelled += need;
+                pending = 0;
+                cursor = new Point(cursor.X + ux * need, cursor.Y + uy * need);
+                target.Add(new GCPoint3D(cursor.X, cursor.Y, 0));
+            }
+
+            pending += segmentLength - travelled;
+            cursor = vertex;
+        }
+
+        private static double Distance2D(Point a, Point b)
+        {
+            double dx = a.X - b.X;
+            double dy = a.Y - b.Y;
+            return Math.Sqrt(dx * dx + dy * dy);
+        }
+
         private static Point GetCenterArc(Point StartPt, Point EndPt, double r, bool Clockwise, bool large)
         {
             double radsq = r * r;
